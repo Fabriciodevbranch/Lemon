@@ -31,6 +31,8 @@ public static class DependencyInjection
         services.AddScoped<PdfExportService>();
         services.AddScoped<IExportService, CompositeExportService>();
 
+        services.AddScoped<IEventBus, InMemoryEventBus>();
+
         return services;
     }
 }
