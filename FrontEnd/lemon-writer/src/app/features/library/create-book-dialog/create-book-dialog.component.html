@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>Create New Book</h2>
+
+<mat-dialog-content>
+  @if (error) {
+    <div class="error-banner">{{ error }}</div>
+  }
+
+  <form [formGroup]="form" class="create-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Book Title</mat-label>
+      <input matInput formControlName="title" placeholder="My Amazing Story">
+      @if (form.get('title')?.hasError('required') && form.get('title')?.touched) {
+        <mat-error>Title is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" placeholder="What's your story about?"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Author Name</mat-label>
+      <input matInput formControlName="authorName">
+      @if (form.get('authorName')?.hasError('required') && form.get('authorName')?.touched) {
+        <mat-error>Author name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-checkbox formControlName="isSeries">Part of a series?</mat-checkbox>
+
+    @if (isSeries) {
+      <mat-form-field appearance="outline">
+        <mat-label>Series Name</mat-label>
+        <input matInput formControlName="seriesName">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Volume Number</mat-label>
+        <input matInput type="number" formControlName="volumeNumber" min="1">
+      </mat-form-field>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="loading || form.invalid">
+    @if (loading) { <mat-spinner diameter="18"></mat-spinner> } @else { Create Book }
+  </button>
+</mat-dialog-actions>

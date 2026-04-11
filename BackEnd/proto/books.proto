@@ -1,0 +1,36 @@
+syntax = "proto3";
+option csharp_namespace = "LemonWriter.Grpc";
+package books;
+
+service BooksService {
+  rpc GetBooks (GetBooksRequest) returns (GetBooksResponse);
+  rpc GetBook (GetBookRequest) returns (BookResponse);
+  rpc CreateBook (CreateBookRequest) returns (BookResponse);
+  rpc UpdateBook (UpdateBookRequest) returns (BookResponse);
+  rpc DeleteBook (DeleteBookRequest) returns (DeleteBookResponse);
+}
+
+message GetBooksRequest { string author_id = 1; }
+message GetBooksResponse { repeated BookResponse books = 1; }
+message GetBookRequest { string id = 1; }
+message BookResponse {
+  string id = 1; string title = 2; string description = 3;
+  string author_id = 4; string isbn = 5; string inbr = 6;
+  string author_name = 7; string cover_image_url = 8;
+  bool is_series = 9; int32 series_volume = 10; string series_name = 11;
+  string created_at = 12; string updated_at = 13;
+}
+message CreateBookRequest {
+  string title = 1; string description = 2; string author_id = 3;
+  string isbn = 4; string inbr = 5; string author_name = 6;
+  string cover_image_url = 7; bool is_series = 8; int32 series_volume = 9;
+  string series_name = 10;
+}
+message UpdateBookRequest {
+  string id = 1; string title = 2; string description = 3;
+  string isbn = 4; string inbr = 5; string author_name = 6;
+  string cover_image_url = 7; bool is_series = 8; int32 series_volume = 9;
+  string series_name = 10;
+}
+message DeleteBookRequest { string id = 1; }
+message DeleteBookResponse { bool success = 1; }

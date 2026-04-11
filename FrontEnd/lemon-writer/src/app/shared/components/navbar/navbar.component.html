@@ -1,0 +1,26 @@
+<mat-toolbar class="navbar">
+  <a routerLink="/library" class="brand">
+    <mat-icon>auto_stories</mat-icon>
+    <span>Lemon Writer</span>
+  </a>
+
+  <span class="spacer"></span>
+
+  @if (currentUser()) {
+    <button mat-button routerLink="/library" routerLinkActive="active">My Library</button>
+    <button mat-button routerLink="/settings" routerLinkActive="active">
+      <mat-icon>settings</mat-icon>
+    </button>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item disabled>{{ currentUser()?.displayName }}</button>
+      <button mat-menu-item routerLink="/settings">Settings</button>
+      <button mat-menu-item (click)="logout()">Sign Out</button>
+    </mat-menu>
+  } @else {
+    <button mat-button routerLink="/auth/login">Sign In</button>
+    <button mat-raised-button color="primary" routerLink="/auth/register">Get Started</button>
+  }
+</mat-toolbar>

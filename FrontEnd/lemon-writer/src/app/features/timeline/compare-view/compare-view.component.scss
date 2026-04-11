@@ -1,0 +1,55 @@
+.compare-view {
+  background: var(--surface-color);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.compare-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  .compare-icon { color: var(--text-secondary); }
+}
+
+.version-label {
+  flex: 1;
+  p { color: var(--text-secondary); margin: 4px 0 0; font-size: 0.9rem; }
+}
+
+.version-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  &.a { background: #e3f2fd; color: #1565c0; }
+  &.b { background: #e8f5e9; color: #2e7d32; }
+}
+
+.diff-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  .additions { color: #2e7d32; }
+  .deletions { color: #c62828; }
+}
+
+.diff-content {
+  font-family: var(--font-body);
+  line-height: 1.8;
+  color: var(--text-primary);
+
+  ::ng-deep {
+    ins { background: #c8e6c9; text-decoration: none; }
+    del { background: #ffcdd2; text-decoration: line-through; }
+  }
+}
+
+.loading-state { display: flex; justify-content: center; padding: 40px; }
+.error-state { text-align: center; color: var(--text-secondary); padding: 40px; }

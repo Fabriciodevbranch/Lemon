@@ -1,0 +1,32 @@
+<app-navbar></app-navbar>
+
+@if (!loading()) {
+  <div class="editor-container">
+    <app-editor-toolbar
+      [wordCount]="wordCount()"
+      [autoSaveStatus]="autoSaveStatus()"
+      (takeSnapshot)="onTakeSnapshot()"
+      (seeTimeline)="goToTimeline()"
+      (seeDrafts)="goToDrafts()"
+    ></app-editor-toolbar>
+
+    <div class="chapter-title-bar">
+      <h2 class="chapter-title">{{ chapter()?.title }}</h2>
+    </div>
+
+    <div class="editor-wrapper">
+      <quill-editor
+        [ngModel]="content()"
+        (onContentChanged)="onContentChanged($event)"
+        [modules]="quillModules"
+        placeholder="Begin your story here..."
+        theme="snow"
+        class="quill-editor"
+      ></quill-editor>
+    </div>
+  </div>
+} @else {
+  <div class="loading-overlay">
+    <div class="loading-indicator">Loading your chapter...</div>
+  </div>
+}

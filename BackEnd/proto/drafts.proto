@@ -1,0 +1,26 @@
+syntax = "proto3";
+option csharp_namespace = "LemonWriter.Grpc";
+package drafts;
+
+service DraftsService {
+  rpc GetDrafts (GetDraftsRequest) returns (GetDraftsResponse);
+  rpc GetDraft (GetDraftRequest) returns (DraftResponse);
+  rpc CreateDraft (CreateDraftRequest) returns (DraftResponse);
+  rpc UpdateDraft (UpdateDraftRequest) returns (DraftResponse);
+  rpc PublishDraft (PublishDraftRequest) returns (DraftResponse);
+  rpc DeleteDraft (DeleteDraftRequest) returns (DeleteDraftResponse);
+}
+
+message GetDraftsRequest { string chapter_id = 1; }
+message GetDraftsResponse { repeated DraftResponse drafts = 1; }
+message GetDraftRequest { string id = 1; }
+message DraftResponse {
+  string id = 1; string chapter_id = 2; string title = 3;
+  string content = 4; string created_at = 5; string updated_at = 6;
+  bool is_published = 7; string published_at = 8;
+}
+message CreateDraftRequest { string chapter_id = 1; string title = 2; string initial_content = 3; }
+message UpdateDraftRequest { string id = 1; string title = 2; string content = 3; }
+message PublishDraftRequest { string id = 1; string publish_message = 2; }
+message DeleteDraftRequest { string id = 1; }
+message DeleteDraftResponse { bool success = 1; }

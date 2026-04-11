@@ -1,0 +1,31 @@
+<mat-card class="snapshot-card" [class.selected]="isSelected">
+  <mat-card-content>
+    <div class="card-header">
+      <div class="version-dot"></div>
+      <div class="version-info">
+        <p class="version-message">{{ snapshot.message }}</p>
+        <div class="version-meta">
+          <span class="timestamp">{{ snapshot.createdAt | timeAgo }}</span>
+          <mat-chip class="word-count-chip">{{ snapshot.wordCount }} words</mat-chip>
+        </div>
+      </div>
+    </div>
+
+    <div class="version-actions">
+      <button mat-button size="small" (click)="viewVersion.emit(snapshot)" matTooltip="View this version">
+        <mat-icon>visibility</mat-icon> View
+      </button>
+      <button mat-button size="small" (click)="grabContent.emit(snapshot)" matTooltip="Grab content from this version">
+        <mat-icon>content_copy</mat-icon> Grab Content
+      </button>
+      <button mat-button size="small" color="warn" (click)="restoreVersion.emit(snapshot)" matTooltip="Restore to this version">
+        <mat-icon>restore</mat-icon> Restore
+      </button>
+      @if (compareMode) {
+        <button mat-icon-button [color]="isSelected ? 'primary' : ''" (click)="selectForCompare.emit(snapshot)" matTooltip="Select for comparison">
+          <mat-icon>{{ isSelected ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+        </button>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>

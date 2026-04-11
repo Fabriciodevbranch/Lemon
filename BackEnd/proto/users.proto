@@ -1,0 +1,14 @@
+syntax = "proto3";
+option csharp_namespace = "LemonWriter.Grpc";
+package users;
+
+service UsersService {
+  rpc GetUser (GetUserRequest) returns (UserResponse);
+  rpc RegisterUser (RegisterUserRequest) returns (UserResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (UserResponse);
+}
+
+message GetUserRequest { string id = 1; }
+message UserResponse { string id = 1; string email = 2; string name = 3; string oauth_provider = 4; string created_at = 5; }
+message RegisterUserRequest { string email = 1; string name = 2; string password = 3; string oauth_provider = 4; string oauth_provider_id = 5; }
+message UpdateUserRequest { string id = 1; string name = 2; }

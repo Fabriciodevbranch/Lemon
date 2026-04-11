@@ -1,0 +1,133 @@
+<app-navbar></app-navbar>
+
+@if (!loading()) {
+  <div class="settings-container">
+    <div class="settings-header">
+      <a mat-icon-button routerLink="/library" aria-label="Back to library">
+        <mat-icon>arrow_back</mat-icon>
+      </a>
+      <div>
+        <h1>Book Settings</h1>
+        <p class="subtitle">{{ book()?.title }}</p>
+      </div>
+    </div>
+
+    <div class="settings-layout">
+      <!-- Left: Chapters -->
+      <aside class="chapters-panel">
+        <div class="panel-header">
+          <h2>Chapters</h2>
+          <button mat-icon-button (click)="addChapter()" aria-label="Add chapter">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+        @if (chapters().length === 0) {
+          <p class="empty-chapters">No chapters yet. Add one!</p>
+        } @else {
+          <ul class="chapter-list">
+            @for (chapter of chapters(); track chapter.id) {
+              <li class="chapter-item">
+                <a [routerLink]="['/books', bookId, 'chapters', chapter.id, 'edit']" class="chapter-link">
+                  <mat-icon>article</mat-icon>
+                  <span>{{ chapter.title }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+
+      <!-- Right: Book metadata form -->
+      <main class="settings-main">
+        <form [formGroup]="form" (ngSubmit)="save()" class="settings-form">
+          <section class="form-section">
+            <h3>Book Details</h3>
+
+            <div class="cover-row">
+              @if (book()?.coverImageUrl) {
+                <img [src]="book()!.coverImageUrl" alt="Cover" class="cover-preview">
+              } @else {
+                <div class="cover-placeholder">{{ book()?.title?.[0] }}</div>
+              }
+              <div>
+                <p class="cover-label">Cover Image</p>
+                <input type="file" #coverInput accept="image/*" (change)="onCoverImageSelected($event)" style="display:none">
+                <button type="button" mat-stroked-button (click)="coverInput.click()">
+                  <mat-icon>upload</mat-icon> Upload Cover
+                </button>
+              </div>
+            </div>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="title">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="4"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Author Name</mat-label>
+              <input matInput formControlName="authorName">
+            </mat-form-field>
+
+            <div class="row-fields">
+              <mat-form-field appearance="outline">
+                <mat-label>ISBN</mat-label>
+                <input matInput formControlName="isbn">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>INBR</mat-label>
+                <input matInput formControlName="inbr">
+              </mat-form-field>
+            </div>
+
+            <mat-checkbox formControlName="isSeries">Part of a series?</mat-checkbox>
+
+            @if (isSeries) {
+              <div class="row-fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Series Name</mat-label>
+                  <input matInput formControlName="seriesName">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Volume Number</mat-label>
+                  <input matInput type="number" formControlName="volumeNumber" min="1">
+                </mat-form-field>
+              </div>
+            }
+          </section>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="saving() || form.invalid">
+              @if (saving()) { <mat-spinner diameter="18"></mat-spinner> } @else { Save Changes }
+            </button>
+          </div>
+        </form>
+
+        <mat-divider></mat-divider>
+
+        <section class="export-section">
+          <h3>Export Your Book</h3>
+          <p class="export-desc">Download your book in a publication-ready format.</p>
+          <div class="export-actions">
+            <button mat-stroked-button (click)="exportEpub()">
+              <mat-icon>menu_book</mat-icon> Export as EPUB
+            </button>
+            <button mat-stroked-button (click)="exportPdf()">
+              <mat-icon>picture_as_pdf</mat-icon> Export as PDF
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+} @else {
+  <div class="loading-state">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+}

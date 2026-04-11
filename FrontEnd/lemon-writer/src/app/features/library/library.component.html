@@ -1,0 +1,42 @@
+<app-navbar></app-navbar>
+
+<div class="library-container">
+  <div class="library-header">
+    <div>
+      <h1>My Library</h1>
+      <p class="subtitle">Your stories, all in one place</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      New Book
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button mat-button (click)="loadBooks()">Try Again</button>
+    </div>
+  } @else if (books().length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">📚</span>
+      <h2>Your library is empty</h2>
+      <p>Start your first book and begin your writing journey</p>
+      <button mat-raised-button color="primary" (click)="openCreateDialog()">
+        <mat-icon>add</mat-icon>
+        Create Your First Book
+      </button>
+    </div>
+  } @else {
+    <div class="books-grid">
+      @for (book of books(); track book.id) {
+        <app-book-card [book]="book" (bookDeleted)="onBookDeleted($event)"></app-book-card>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,64 @@
+<app-navbar></app-navbar>
+
+<div class="timeline-container">
+  <div class="timeline-header">
+    <div class="header-left">
+      <a mat-icon-button [routerLink]="['/books', bookId, 'chapters', chapterId, 'edit']">
+        <mat-icon>arrow_back</mat-icon>
+      </a>
+      <div>
+        <h1>Version Timeline</h1>
+        <p class="subtitle">All saved snapshots of this chapter</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="toggleCompareMode()" [class.active]="compareMode()">
+        <mat-icon>compare</mat-icon>
+        {{ compareMode() ? 'Exit Compare' : 'Compare Versions' }}
+      </button>
+      @if (compareMode() && canCompare()) {
+        <button mat-raised-button color="primary" (click)="comparingSnapshot.set(selectedForCompare()[0])">
+          <mat-icon>compare_arrows</mat-icon> View Comparison
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (compareMode() && canCompare()) {
+    <app-compare-view
+      [bookId]="bookId"
+      [chapterId]="chapterId"
+      [snapshotA]="selectedForCompare()[0]"
+      [snapshotB]="selectedForCompare()[1]"
+      class="compare-section"
+    ></app-compare-view>
+  }
+
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+  } @else if (snapshots().length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">📸</span>
+      <h2>No snapshots yet</h2>
+      <p>Go to the editor and take your first snapshot to start tracking versions of this chapter.</p>
+      <a mat-raised-button color="primary" [routerLink]="['/books', bookId, 'chapters', chapterId, 'edit']">
+        <mat-icon>edit</mat-icon> Back to Editor
+      </a>
+    </div>
+  } @else {
+    <div class="timeline-track">
+      <div class="timeline-line"></div>
+      @for (snapshot of snapshots(); track snapshot.id) {
+        <app-snapshot-card
+          [snapshot]="snapshot"
+          [isSelected]="isSelectedForCompare(snapshot)"
+          [compareMode]="compareMode()"
+          (viewVersion)="comparingSnapshot.set($event)"
+          (restoreVersion)="restoreVersion($event)"
+          (grabContent)="grabContent($event)"
+          (selectForCompare)="onSelectForCompare($event)"
+        ></app-snapshot-card>
+      }
+    </div>
+  }
+</div>

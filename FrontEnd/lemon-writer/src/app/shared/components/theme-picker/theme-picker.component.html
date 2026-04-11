@@ -1,0 +1,10 @@
+<div class="theme-picker">
+  <mat-button-toggle-group [value]="currentTheme()" (change)="selectTheme($event.value)">
+    @for (theme of themes; track theme.value) {
+      <mat-button-toggle [value]="theme.value" [attr.aria-label]="theme.label">
+        <span class="theme-icon">{{ theme.icon }}</span>
+        <span class="theme-label">{{ theme.label }}</span>
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+</div>

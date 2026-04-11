@@ -1,0 +1,68 @@
+<app-navbar></app-navbar>
+
+<div class="drafts-container">
+  <div class="drafts-header">
+    <div class="header-left">
+      <a mat-icon-button [routerLink]="['/books', bookId, 'chapters', chapterId, 'edit']">
+        <mat-icon>arrow_back</mat-icon>
+      </a>
+      <div>
+        <h1>Drafts</h1>
+        <p class="subtitle">Experimental versions of this chapter</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="createDraft()">
+      <mat-icon>add</mat-icon> New Draft
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+  } @else if (drafts().length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">📝</span>
+      <h2>No drafts yet</h2>
+      <p>Create a draft to safely experiment with different versions of your chapter without affecting the main content.</p>
+      <button mat-raised-button color="primary" (click)="createDraft()">
+        <mat-icon>add</mat-icon> Create First Draft
+      </button>
+    </div>
+  } @else {
+    <div class="drafts-list">
+      @for (draft of drafts(); track draft.id) {
+        <mat-card class="draft-card" [class.published]="draft.isPublished">
+          <mat-card-content>
+            <div class="draft-header">
+              <div>
+                <h3 class="draft-title">{{ draft.title }}</h3>
+                <div class="draft-meta">
+                  <span class="draft-time">{{ draft.updatedAt | timeAgo }}</span>
+                  <span class="draft-words">{{ draft.wordCount }} words</span>
+                  @if (draft.isPublished) {
+                    <mat-chip class="published-chip">Published</mat-chip>
+                  }
+                </div>
+                @if (draft.isPublished && draft.publishMessage) {
+                  <p class="publish-message">"{{ draft.publishMessage }}"</p>
+                }
+              </div>
+              <div class="draft-actions">
+                @if (!draft.isPublished) {
+                  <a mat-icon-button [routerLink]="['/books', bookId, 'chapters', chapterId, 'drafts', draft.id, 'edit']" matTooltip="Edit draft">
+                    <mat-icon>edit</mat-icon>
+                  </a>
+                  <button mat-stroked-button color="primary" (click)="publishDraft(draft)">
+                    <mat-icon>publish</mat-icon> Publish Draft
+                  </button>
+                }
+                <button mat-icon-button color="warn" (click)="deleteDraft(draft)" matTooltip="Delete draft">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

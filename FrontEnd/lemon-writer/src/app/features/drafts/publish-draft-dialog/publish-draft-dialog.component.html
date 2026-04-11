@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>Publish Draft</h2>
+<mat-dialog-content>
+  <p class="publish-intro">
+    Publishing "<strong>{{ data.draft.title }}</strong>" will merge its content into the chapter.
+    Describe what this draft changes or adds.
+  </p>
+
+  @if (error) {
+    <div class="error-banner">{{ error }}</div>
+  }
+
+  <form [formGroup]="form" class="publish-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Publish message</mat-label>
+      <textarea matInput formControlName="publishMessage" rows="3"
+        placeholder="e.g. Added the confrontation scene and revised dialogue"></textarea>
+      @if (form.get('publishMessage')?.hasError('required') && form.get('publishMessage')?.touched) {
+        <mat-error>Please describe what this draft adds or changes</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-raised-button color="primary" (click)="onPublish()" [disabled]="loading || form.invalid">
+    @if (loading) {
+      <mat-spinner diameter="18"></mat-spinner>
+    } @else {
+      <ng-container>
+        <mat-icon>publish</mat-icon> Publish Draft
+      </ng-container>
+    }
+  </button>
+</mat-dialog-actions>
