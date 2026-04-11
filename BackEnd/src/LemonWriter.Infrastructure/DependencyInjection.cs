@@ -1,5 +1,6 @@
 using LemonWriter.Application.Common.Interfaces;
 using LemonWriter.Infrastructure.Data;
+using LemonWriter.Infrastructure.Services;
 using LemonWriter.Infrastructure.EventBus;
 using LemonWriter.Infrastructure.Repositories;
 using LemonWriter.Infrastructure.Services.Export;
@@ -24,7 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IDraftRepository, DraftRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
 
-        services.AddScoped<IEventBus, InMemoryEventBus>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<EpubExportService>();
         services.AddScoped<PdfExportService>();
         services.AddScoped<IExportService, CompositeExportService>();
