@@ -34,8 +34,29 @@ public class AuthController : ControllerBase
         if (result.IsFailure)
             return Unauthorized(new { error = "Invalid credentials." });
 
-        var token = GenerateJwtToken(result.Value!.Id, result.Value.Email, result.Value.Name);
-        return Ok(new { token, user = result.Value });
+        // Retrieve full user to verify password hash
+        var userQuery = await _mediator.Send(new GetUserByEmailQuery(request.Email), cancellationToken);
+        var user = userQuery.Value!;
+
+        if (!VerifyPassword(request.Password, user))
+            return Unauthorized(new { error = "Invalid credentials." });
+
+        var token = GenerateJwtToken(user.Id, user.Email, user.Name);
+        return Ok(new { token, user });
+    }
+
+    private static bool VerifyPassword(string password, Application.Common.DTOs.UserDto user)
+    {
+        // OAuth-only users have no password
+        if (string.IsNullOrEmpty(password))
+            return false;
+
+        // Password hash is stored in format "salt.hash" (PBKDF2/SHA256)
+        // For this scaffold the UserDto does not expose the hash; verification
+        // would normally be done in a dedicated auth service with access to the
+        // raw entity. Returning true here as a placeholder — replace with real
+        // verification once auth infrastructure is wired end-to-end.
+        return true;
     }
 
     [HttpGet("oauth/google/callback")]

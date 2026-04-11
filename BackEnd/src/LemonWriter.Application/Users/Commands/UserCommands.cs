@@ -44,9 +44,12 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
         string? passwordHash = null;
         if (request.Password is not null)
         {
-            using var sha = System.Security.Cryptography.SHA256.Create();
-            var bytes = System.Text.Encoding.UTF8.GetBytes(request.Password);
-            passwordHash = Convert.ToHexString(sha.ComputeHash(bytes));
+            // PBKDF2 with SHA256, 100,000 iterations, 32-byte output
+            var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+            using var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(
+                request.Password, salt, 100_000, System.Security.Cryptography.HashAlgorithmName.SHA256);
+            var hash = pbkdf2.GetBytes(32);
+            passwordHash = $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
         }
 
         var user = User.Create(request.Email, request.Name, request.OAuthProvider, request.OAuthProviderId, passwordHash);

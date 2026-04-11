@@ -33,10 +33,10 @@ public class CompositeExportService : IExportService
     private readonly EpubExportService _epubService;
     private readonly PdfExportService _pdfService;
 
-    public CompositeExportService()
+    public CompositeExportService(EpubExportService epubService, PdfExportService pdfService)
     {
-        _epubService = new EpubExportService();
-        _pdfService = new PdfExportService();
+        _epubService = epubService;
+        _pdfService = pdfService;
     }
 
     public Task<byte[]> ExportBookAsync(Guid bookId, string format, CancellationToken cancellationToken = default)

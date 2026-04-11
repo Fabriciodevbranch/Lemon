@@ -25,6 +25,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddScoped<IEventBus, InMemoryEventBus>();
+        services.AddScoped<EpubExportService>();
+        services.AddScoped<PdfExportService>();
         services.AddScoped<IExportService, CompositeExportService>();
 
         return services;
