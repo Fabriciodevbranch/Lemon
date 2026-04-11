@@ -1,3 +1,4 @@
+using LemonWriter.Domain.Common;
 using LemonWriter.Domain.Entities;
 using LemonWriter.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ public class LemonDbContext : DbContext, IUnitOfWork
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Ignore<DomainEvent>();
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LemonDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
