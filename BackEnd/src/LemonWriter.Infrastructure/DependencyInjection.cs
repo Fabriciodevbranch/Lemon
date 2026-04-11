@@ -15,7 +15,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<LemonDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("DefaultConnection") ?? "Data Source=lemon_writer.db"));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")));
 
         services.AddScoped<LemonWriter.Domain.Interfaces.IUnitOfWork>(sp => sp.GetRequiredService<LemonDbContext>());
 
