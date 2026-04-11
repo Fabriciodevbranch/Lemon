@@ -1,0 +1,29 @@
+<div class="editor-toolbar">
+  <div class="toolbar-left">
+    <div class="autosave-status" [class]="autoSaveStatus">
+      @switch (autoSaveStatus) {
+        @case ('saved') { <mat-icon>cloud_done</mat-icon> <span>Saved</span> }
+        @case ('saving') { <mat-icon class="spin">sync</mat-icon> <span>Saving...</span> }
+        @case ('unsaved') { <mat-icon>edit</mat-icon> <span>Unsaved changes</span> }
+      }
+    </div>
+    <span class="word-count">{{ wordCount }} words</span>
+  </div>
+
+  <div class="toolbar-right">
+    <button mat-stroked-button (click)="seeDrafts.emit()" matTooltip="View and manage drafts">
+      <mat-icon>drafts</mat-icon>
+      Drafts
+    </button>
+
+    <button mat-stroked-button (click)="seeTimeline.emit()" matTooltip="View version timeline">
+      <mat-icon>history</mat-icon>
+      Timeline
+    </button>
+
+    <button mat-raised-button color="primary" (click)="takeSnapshot.emit()" matTooltip="Take a snapshot of the current version">
+      <mat-icon>camera_alt</mat-icon>
+      Take a Snapshot
+    </button>
+  </div>
+</div>

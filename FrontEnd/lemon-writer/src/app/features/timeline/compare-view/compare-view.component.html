@@ -1,0 +1,25 @@
+<div class="compare-view">
+  <div class="compare-header">
+    <div class="version-label">
+      <span class="version-tag a">Version A</span>
+      <p>{{ snapshotA.message }}</p>
+    </div>
+    <mat-icon class="compare-icon">compare_arrows</mat-icon>
+    <div class="version-label">
+      <span class="version-tag b">Version B</span>
+      <p>{{ snapshotB.message }}</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else if (error()) {
+    <div class="error-state">{{ error() }}</div>
+  } @else if (diff()) {
+    <div class="diff-stats">
+      <span class="additions">+{{ diff()!.additions }} additions</span>
+      <span class="deletions">-{{ diff()!.deletions }} deletions</span>
+    </div>
+    <div class="diff-content" [innerHTML]="diff()!.htmlDiff"></div>
+  }
+</div>

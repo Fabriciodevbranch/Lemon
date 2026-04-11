@@ -1,0 +1,80 @@
+// Angular Material theming - M3 API (Angular Material 20)
+@use '@angular/material' as mat;
+
+// Import our themes and utilities
+@use './styles/themes/cozy-amber' as cozy-amber;
+@use './styles/themes/cozy-forest' as cozy-forest;
+@use './styles/themes/cozy-night' as cozy-night;
+@use './styles/themes/custom' as custom-theme;
+@use './styles/variables' as *;
+@use './styles/mixins' as *;
+
+// Apply Angular Material M3 theme
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (
+      primary: mat.$orange-palette,
+      tertiary: mat.$green-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+// Default (amber) theme variables applied to :root
+:root {
+  --bg-color: #faf6f0;
+  --surface-color: #fff8ee;
+  --primary-color: #c8702a;
+  --primary-light: #f5e6d3;
+  --text-primary: #3d2b1f;
+  --text-secondary: #7a5c45;
+  --border-color: #e8d9c4;
+  --shadow-color: rgba(100, 60, 20, 0.12);
+  --font-heading: 'Georgia', 'Times New Roman', serif;
+  --font-body: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+}
+
+// Global reset and base styles
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--primary-color);
+  &:hover { opacity: 0.85; }
+}
+
+// Smooth scrollbar
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+  &:hover { background: var(--text-secondary); }
+}
+
+// Quill editor global styles
+.ql-snow .ql-stroke { stroke: var(--text-secondary) !important; }
+.ql-snow .ql-fill { fill: var(--text-secondary) !important; }

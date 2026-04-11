@@ -1,0 +1,37 @@
+<app-navbar></app-navbar>
+
+@if (!loading()) {
+  <div class="draft-editor-container">
+    <div class="draft-toolbar">
+      <div class="toolbar-left">
+        <a mat-icon-button [routerLink]="['/books', bookId, 'chapters', chapterId, 'drafts']">
+          <mat-icon>arrow_back</mat-icon>
+        </a>
+        <div>
+          <h2 class="draft-title">{{ draft()?.title }}</h2>
+          <span class="draft-meta">Draft &bull; {{ wordCount() }} words</span>
+        </div>
+      </div>
+      <div class="autosave-indicator" [class]="autoSaveStatus()">
+        @switch (autoSaveStatus()) {
+          @case ('saved') { <mat-icon>cloud_done</mat-icon><span>Saved</span> }
+          @case ('saving') { <mat-icon>sync</mat-icon><span>Saving...</span> }
+          @case ('unsaved') { <mat-icon>edit</mat-icon><span>Unsaved</span> }
+        }
+      </div>
+    </div>
+
+    <div class="draft-editor-wrapper">
+      <quill-editor
+        [ngModel]="content()"
+        (onContentChanged)="onContentChanged($event)"
+        [modules]="quillModules"
+        placeholder="Write your draft here..."
+        theme="snow"
+        class="quill-editor"
+      ></quill-editor>
+    </div>
+  </div>
+} @else {
+  <div class="loading-state"><mat-spinner diameter="40"></mat-spinner></div>
+}

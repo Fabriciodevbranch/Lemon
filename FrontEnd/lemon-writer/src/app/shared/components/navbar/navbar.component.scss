@@ -1,0 +1,28 @@
+.navbar {
+  background: var(--surface-color);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--primary-color);
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+
+    mat-icon { color: var(--primary-color); }
+  }
+
+  .spacer { flex: 1; }
+
+  button.active {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+}
