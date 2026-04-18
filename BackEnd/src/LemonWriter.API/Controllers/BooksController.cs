@@ -75,11 +75,25 @@ public class BooksController : ControllerBase
         if (!allowedTypes.Contains(cover.ContentType))
             return BadRequest(new { error = "Invalid file type. Only JPEG, PNG, GIF and WebP are allowed." });
 
+        var allowedExtensions = new Dictionary<string, string>
+        {
+            { "image/jpeg", ".jpg" },
+            { "image/png", ".png" },
+            { "image/gif", ".gif" },
+            { "image/webp", ".webp" }
+        };
+        var ext = allowedExtensions[cover.ContentType];
+
         var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
         var coversDir = Path.Combine(webRoot, "covers");
         Directory.CreateDirectory(coversDir);
 
-        var ext = Path.GetExtension(cover.FileName);
+        // Remove any existing cover files for this book
+        foreach (var existing in Directory.GetFiles(coversDir, $"{id}.*"))
+        {
+            System.IO.File.Delete(existing);
+        }
+
         var fileName = $"{id}{ext}";
         var filePath = Path.Combine(coversDir, fileName);
 

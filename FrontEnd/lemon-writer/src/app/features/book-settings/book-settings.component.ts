@@ -107,7 +107,8 @@ export class BookSettingsComponent implements OnInit {
   addChapter(): void {
     const title = prompt('New chapter title:');
     if (!title) return;
-    const order = this.chapters().length;
+    const existingOrders = this.chapters().map(c => c.order);
+    const order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 0;
     this.chaptersService.createChapter(this.bookId, { title, order }).subscribe({
       next: (ch) => this.chapters.update(list => [...list, ch]),
       error: () => this.snackBar.open('Could not add chapter.', 'Dismiss', { duration: 3000 })
