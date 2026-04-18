@@ -32,7 +32,7 @@
 
     <div class="book-meta">
       @if (book.isSeries && book.seriesName) {
-        <mat-chip class="series-chip">{{ book.seriesName }} Vol. {{ book.volumeNumber }}</mat-chip>
+        <mat-chip class="series-chip">{{ book.seriesName }} Vol. {{ book.seriesVolume }}</mat-chip>
       }
       @if (book.chapterCount !== undefined) {
         <span class="chapter-count">{{ book.chapterCount }} chapters</span>

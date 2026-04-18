@@ -11,7 +11,7 @@ export interface Chapter {
 
 export interface CreateChapterRequest {
   title: string;
-  order?: number;
+  order: number;
 }
 
 export interface UpdateChapterRequest {

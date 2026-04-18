@@ -3,15 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Book, CreateBookRequest, UpdateBookRequest } from '../models/book.model';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class BooksService {
   private baseUrl = `${environment.apiUrl}/books`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   getBooks(): Observable<Book[]> {
-    return this.http.get<Book[]>(this.baseUrl);
+    const authorId = this.auth.currentUser$()?.id;
+    return this.http.get<Book[]>(this.baseUrl, { params: { authorId: authorId ?? '' } });
   }
 
   getBook(bookId: string): Observable<Book> {

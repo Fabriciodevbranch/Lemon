@@ -8,8 +8,8 @@ export interface Book {
   coverImageUrl?: string;
   isSeries: boolean;
   seriesName?: string;
-  volumeNumber?: number;
-  ownerId: string;
+  seriesVolume?: number;
+  authorId: string;
   createdAt: string;
   updatedAt: string;
   chapterCount?: number;
@@ -18,12 +18,22 @@ export interface Book {
 export interface CreateBookRequest {
   title: string;
   description?: string;
+  authorId: string;
   authorName: string;
   isbn?: string;
   inbr?: string;
   isSeries: boolean;
   seriesName?: string;
-  volumeNumber?: number;
+  seriesVolume?: number;
 }
 
-export interface UpdateBookRequest extends Partial<CreateBookRequest> {}
+export interface UpdateBookRequest {
+  title: string;
+  description?: string;
+  authorName: string;
+  isbn?: string;
+  inbr?: string;
+  isSeries: boolean;
+  seriesName?: string;
+  seriesVolume?: number;
+}

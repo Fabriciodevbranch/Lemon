@@ -48,7 +48,7 @@ export class BookSettingsComponent implements OnInit {
     inbr: [''],
     isSeries: [false],
     seriesName: [''],
-    volumeNumber: [null]
+    seriesVolume: [null]
   });
 
   get isSeries() { return this.form.get('isSeries')?.value; }
@@ -84,10 +84,13 @@ export class BookSettingsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
-    this.booksService.uploadCoverImage(this.bookId, file).subscribe(res => {
-      const current = this.book();
-      if (current) this.book.set({ ...current, coverImageUrl: res.coverImageUrl });
-      this.snackBar.open('Cover image updated!', 'Dismiss', { duration: 3000 });
+    this.booksService.uploadCoverImage(this.bookId, file).subscribe({
+      next: (res) => {
+        const current = this.book();
+        if (current) this.book.set({ ...current, coverImageUrl: res.coverImageUrl });
+        this.snackBar.open('Cover image updated!', 'Dismiss', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Could not upload cover image.', 'Dismiss', { duration: 3000 })
     });
   }
 
@@ -104,8 +107,10 @@ export class BookSettingsComponent implements OnInit {
   addChapter(): void {
     const title = prompt('New chapter title:');
     if (!title) return;
-    this.chaptersService.createChapter(this.bookId, { title }).subscribe(ch => {
-      this.chapters.update(list => [...list, ch]);
+    const order = this.chapters().length;
+    this.chaptersService.createChapter(this.bookId, { title, order }).subscribe({
+      next: (ch) => this.chapters.update(list => [...list, ch]),
+      error: () => this.snackBar.open('Could not add chapter.', 'Dismiss', { duration: 3000 })
     });
   }
 }

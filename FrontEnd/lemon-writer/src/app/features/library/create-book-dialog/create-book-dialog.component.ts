@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BooksService } from '../../../core/services/books.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-create-book-dialog',
@@ -18,6 +19,7 @@ import { BooksService } from '../../../core/services/books.service';
 export class CreateBookDialogComponent {
   private fb = inject(FormBuilder);
   private booksService = inject(BooksService);
+  private authService = inject(AuthService);
   private dialogRef = inject(MatDialogRef<CreateBookDialogComponent>);
 
   form: FormGroup = this.fb.group({
@@ -26,7 +28,7 @@ export class CreateBookDialogComponent {
     authorName: ['', Validators.required],
     isSeries: [false],
     seriesName: [''],
-    volumeNumber: [null]
+    seriesVolume: [null]
   });
 
   loading = false;
@@ -36,8 +38,13 @@ export class CreateBookDialogComponent {
 
   onSubmit(): void {
     if (this.form.invalid) return;
+    const authorId = this.authService.currentUser$()?.id;
+    if (!authorId) {
+      this.error = 'You must be logged in to create a book.';
+      return;
+    }
     this.loading = true;
-    this.booksService.createBook(this.form.value).subscribe({
+    this.booksService.createBook({ ...this.form.value, authorId }).subscribe({
       next: (book) => this.dialogRef.close(book),
       error: (err) => {
         this.error = err?.error?.message || 'Could not create book.';
