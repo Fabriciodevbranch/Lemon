@@ -20,55 +20,28 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 0 24px 24px;
+  padding: 16px 24px 24px;
 }
 
-.quill-editor {
+.editor-field {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background: var(--surface-color);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px var(--shadow-color);
-  margin-top: 16px;
-  font-family: var(--font-body);
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: var(--text-primary);
+
+  ::ng-deep .mat-mdc-form-field-flex,
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    height: 100%;
+  }
 }
 
-::ng-deep {
-  .ql-container {
-    flex: 1;
-    overflow-y: auto;
-    font-size: 1.05rem;
-    font-family: var(--font-body);
-    color: var(--text-primary);
-  }
-
-  .ql-editor {
-    padding: 32px 64px;
-    max-width: 800px;
-    margin: 0 auto;
-    min-height: 100%;
-    line-height: 1.9;
-
-    p { margin-bottom: 1em; }
-    h1, h2, h3, h4 { font-family: var(--font-heading); color: var(--text-primary); }
-    blockquote { border-left: 4px solid var(--primary-color); padding-left: 16px; color: var(--text-secondary); font-style: italic; }
-  }
-
-  .ql-toolbar {
-    background: var(--surface-color);
-    border-bottom: 1px solid var(--border-color) !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .ql-container { border: none !important; }
+.editor-textarea {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: var(--text-primary);
+  resize: none;
+  min-height: 400px;
 }
 
 .loading-overlay {
@@ -76,6 +49,10 @@
   align-items: center;
   justify-content: center;
   height: calc(100vh - 64px);
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+
+  .loading-indicator {
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+  }
 }

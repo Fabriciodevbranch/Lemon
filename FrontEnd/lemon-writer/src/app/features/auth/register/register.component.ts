@@ -14,7 +14,7 @@ import { AuthService } from '../../../core/auth/auth.service';
   standalone: true,
   imports: [
     ReactiveFormsModule, RouterLink, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatIconModule, MatDividerModule, MatProgressSpinnerModule
+    MatButtonModule, MatIconModule, MatProgressSpinnerModule
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'

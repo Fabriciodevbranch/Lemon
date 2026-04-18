@@ -6,27 +6,27 @@ import { Chapter, CreateChapterRequest, UpdateChapterRequest } from '../models/c
 
 @Injectable({ providedIn: 'root' })
 export class ChaptersService {
-  private baseUrl = (bookId: string) => `${environment.apiUrl}/books/${bookId}/chapters`;
+  private baseUrl = `${environment.apiUrl}/chapters`;
 
   constructor(private http: HttpClient) {}
 
   getChapters(bookId: string): Observable<Chapter[]> {
-    return this.http.get<Chapter[]>(this.baseUrl(bookId));
+    return this.http.get<Chapter[]>(this.baseUrl, { params: { bookId } });
   }
 
   getChapter(bookId: string, chapterId: string): Observable<Chapter> {
-    return this.http.get<Chapter>(`${this.baseUrl(bookId)}/${chapterId}`);
+    return this.http.get<Chapter>(`${this.baseUrl}/${chapterId}`);
   }
 
   createChapter(bookId: string, request: CreateChapterRequest): Observable<Chapter> {
-    return this.http.post<Chapter>(this.baseUrl(bookId), request);
+    return this.http.post<Chapter>(this.baseUrl, { bookId, ...request });
   }
 
   updateChapter(bookId: string, chapterId: string, request: UpdateChapterRequest): Observable<Chapter> {
-    return this.http.put<Chapter>(`${this.baseUrl(bookId)}/${chapterId}`, request);
+    return this.http.put<Chapter>(`${this.baseUrl}/${chapterId}`, request);
   }
 
   deleteChapter(bookId: string, chapterId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl(bookId)}/${chapterId}`);
+    return this.http.delete<void>(`${this.baseUrl}/${chapterId}`);
   }
 }

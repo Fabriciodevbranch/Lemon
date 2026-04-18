@@ -7,4 +7,24 @@
       </mat-button-toggle>
     }
   </mat-button-toggle-group>
+
+  @if (currentTheme() === 'custom') {
+    <div class="custom-colors">
+      <p class="custom-colors-title">Customize Colors</p>
+      <div class="color-grid">
+        @for (color of customColors; track color.varName) {
+          <div class="color-item">
+            <label [for]="color.varName" class="color-label">{{ color.label }}</label>
+            <input
+              type="color"
+              [id]="color.varName"
+              [value]="colorValues[color.varName]"
+              (input)="onColorChange(color.varName, $any($event.target).value)"
+              class="color-input"
+            >
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>

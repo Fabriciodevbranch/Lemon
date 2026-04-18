@@ -61,12 +61,22 @@
 }
 
 .divider-text {
+  display: flex;
+  align-items: center;
   margin: 20px 0;
+  gap: 12px;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+  }
+
   span {
-    background: var(--surface-color);
-    padding: 0 12px;
     color: var(--text-secondary);
     font-size: 0.9rem;
+    white-space: nowrap;
   }
 }
 

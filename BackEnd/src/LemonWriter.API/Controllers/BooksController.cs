@@ -12,8 +12,13 @@ namespace LemonWriter.API.Controllers;
 public class BooksController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IWebHostEnvironment _env;
 
-    public BooksController(IMediator mediator) => _mediator = mediator;
+    public BooksController(IMediator mediator, IWebHostEnvironment env)
+    {
+        _mediator = mediator;
+        _env = env;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetBooks([FromQuery] Guid authorId, CancellationToken cancellationToken)
@@ -58,6 +63,61 @@ public class BooksController : ControllerBase
     {
         var result = await _mediator.Send(new DeleteBookCommand(id), cancellationToken);
         return result.IsSuccess ? NoContent() : NotFound(new { error = result.Error!.Message });
+    }
+
+    [HttpPost("{id:guid}/cover")]
+    public async Task<IActionResult> UploadCover(Guid id, IFormFile cover, CancellationToken cancellationToken)
+    {
+        if (cover is null || cover.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedTypes.Contains(cover.ContentType))
+            return BadRequest(new { error = "Invalid file type. Only JPEG, PNG, GIF and WebP are allowed." });
+
+        var allowedExtensions = new Dictionary<string, string>
+        {
+            { "image/jpeg", ".jpg" },
+            { "image/png", ".png" },
+            { "image/gif", ".gif" },
+            { "image/webp", ".webp" }
+        };
+        var ext = allowedExtensions[cover.ContentType];
+
+        var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+        var coversDir = Path.Combine(webRoot, "covers");
+        Directory.CreateDirectory(coversDir);
+
+        // Remove any existing cover files for this book
+        foreach (var existing in Directory.GetFiles(coversDir, $"{id}.*"))
+        {
+            System.IO.File.Delete(existing);
+        }
+
+        var fileName = $"{id}{ext}";
+        var filePath = Path.Combine(coversDir, fileName);
+
+        await using (var stream = System.IO.File.Create(filePath))
+        {
+            await cover.CopyToAsync(stream, cancellationToken);
+        }
+
+        var coverImageUrl = $"/covers/{fileName}";
+
+        var bookResult = await _mediator.Send(new GetBookByIdQuery(id), cancellationToken);
+        if (bookResult.IsFailure)
+            return NotFound(new { error = "Book not found." });
+
+        var book = bookResult.Value!;
+        var updateCommand = new UpdateBookCommand(
+            id, book.Title, book.Description, book.AuthorName,
+            book.ISBN, book.INBR, coverImageUrl,
+            book.IsSeries, book.SeriesVolume, book.SeriesName);
+        var updateResult = await _mediator.Send(updateCommand, cancellationToken);
+
+        return updateResult.IsSuccess
+            ? Ok(new { coverImageUrl })
+            : BadRequest(new { error = updateResult.Error!.Message });
     }
 }
 
