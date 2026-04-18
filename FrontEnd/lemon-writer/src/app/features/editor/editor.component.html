@@ -15,14 +15,18 @@
     </div>
 
     <div class="editor-wrapper">
-      <quill-editor
-        [ngModel]="content()"
-        (onContentChanged)="onContentChanged($event)"
-        [modules]="quillModules"
-        placeholder="Begin your story here..."
-        theme="snow"
-        class="quill-editor"
-      ></quill-editor>
+      <mat-form-field appearance="outline" class="editor-field">
+        <textarea
+          matInput
+          cdkTextareaAutosize
+          cdkAutosizeMinRows="20"
+          [ngModel]="content()"
+          (ngModelChange)="onContentInput($event)"
+          placeholder="Begin your story here..."
+          class="editor-textarea"
+          spellcheck="true"
+        ></textarea>
+      </mat-form-field>
     </div>
   </div>
 } @else {

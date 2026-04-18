@@ -3,11 +3,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { QuillModule } from 'ngx-quill';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { EditorToolbarComponent } from './editor-toolbar/editor-toolbar.component';
@@ -18,7 +17,10 @@ import { Chapter } from '../../core/models/chapter.model';
 @Component({
   selector: 'app-editor',
   standalone: true,
-  imports: [FormsModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, QuillModule, NavbarComponent, EditorToolbarComponent],
+  imports: [
+    FormsModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
+    TextFieldModule, NavbarComponent, EditorToolbarComponent
+  ],
   templateUrl: './editor.component.html',
   styleUrl: './editor.component.scss'
 })
@@ -27,7 +29,6 @@ export class EditorComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private chaptersService = inject(ChaptersService);
   private snapshotsService = inject(SnapshotsService);
-  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
   private contentChanged$ = new Subject<string>();
@@ -41,24 +42,11 @@ export class EditorComponent implements OnInit, OnDestroy {
   wordCount = signal(0);
   loading = signal(true);
 
-  quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, 4, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ color: [] }, { background: [] }],
-      [{ font: [] }, { size: ['small', false, 'large', 'huge'] }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['blockquote', 'code-block'],
-      ['link', 'image'],
-      ['clean']
-    ]
-  };
-
   ngOnInit(): void {
     this.chaptersService.getChapter(this.bookId, this.chapterId).subscribe(chapter => {
       this.chapter.set(chapter);
       this.content.set(chapter.content || '');
-      this.wordCount.set(chapter.wordCount || 0);
+      this.wordCount.set(this.countWords(chapter.content || ''));
       this.loading.set(false);
     });
 
@@ -75,11 +63,11 @@ export class EditorComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onContentChanged(event: { html: string | null; text: string }): void {
-    this.content.set(event.html || '');
-    this.wordCount.set(this.countWords(event.text || ''));
+  onContentInput(value: string): void {
+    this.content.set(value);
+    this.wordCount.set(this.countWords(value));
     this.autoSaveStatus.set('unsaved');
-    this.contentChanged$.next(event.html || '');
+    this.contentChanged$.next(value);
   }
 
   private autoSave(content: string): void {

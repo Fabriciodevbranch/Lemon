@@ -74,7 +74,3 @@ a {
   border-radius: 3px;
   &:hover { background: var(--text-secondary); }
 }
-
-// Quill editor global styles
-.ql-snow .ql-stroke { stroke: var(--text-secondary) !important; }
-.ql-snow .ql-fill { fill: var(--text-secondary) !important; }

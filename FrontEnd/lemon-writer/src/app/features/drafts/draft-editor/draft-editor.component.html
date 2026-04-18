@@ -22,14 +22,18 @@
     </div>
 
     <div class="draft-editor-wrapper">
-      <quill-editor
-        [ngModel]="content()"
-        (onContentChanged)="onContentChanged($event)"
-        [modules]="quillModules"
-        placeholder="Write your draft here..."
-        theme="snow"
-        class="quill-editor"
-      ></quill-editor>
+      <mat-form-field appearance="outline" class="editor-field">
+        <textarea
+          matInput
+          cdkTextareaAutosize
+          cdkAutosizeMinRows="20"
+          [ngModel]="content()"
+          (ngModelChange)="onContentInput($event)"
+          placeholder="Write your draft here..."
+          class="editor-textarea"
+          spellcheck="true"
+        ></textarea>
+      </mat-form-field>
     </div>
   </div>
 } @else {
