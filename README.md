@@ -63,15 +63,57 @@ Timeline events can reference existing characters, objects, and scenarios. Story
 Lemon is a modular monolith with clean architectural boundaries and service-ready infrastructure. It uses REST for the browser-facing API and includes gRPC contracts for service-to-service evolution. The current deployment is intentionally simpler than a distributed microservice topology while keeping domain, application, infrastructure, and transport concerns separate.
 
 ```mermaid
-flowchart LR
-    Browser["Angular 22 web app"] -->|REST / JWT| API["ASP.NET Core 9 API"]
-    API --> Application["Application layer\nCQRS + use-case ports"]
-    Application --> Domain["Domain layer\nEntities + events"]
-    Infrastructure["Infrastructure adapters\nEF Core + repositories + exports"] -. implements .-> Application
-    Infrastructure --> PostgreSQL[(PostgreSQL 16)]
-    API -->|OTLP| OTel["OpenTelemetry Collector"]
-    OTel --> Prometheus["Prometheus"]
-    Prometheus --> Grafana["Grafana dashboards"]
+flowchart TB
+    subgraph Product["Lemon Writer product"]
+        direction LR
+        Browser["Angular 22<br/>Web application"]
+        API["ASP.NET Core 9<br/>REST API"]
+        Application["Application<br/>Use cases and ports"]
+        Domain["Domain<br/>Entities and events"]
+
+        Browser -->|"HTTPS / REST / JWT"| API
+        API -->|"dispatches"| Application
+        Application -->|"uses"| Domain
+    end
+
+    subgraph Persistence["Data and external adapters"]
+        direction LR
+        Infrastructure["Infrastructure<br/>EF Core / repositories / exports"]
+        PostgreSQL[("PostgreSQL 16")]
+
+        Infrastructure -->|"reads and writes"| PostgreSQL
+    end
+
+    subgraph Observability["Observability pipeline"]
+        direction LR
+        OTel["OpenTelemetry<br/>Collector"]
+        Prometheus["Prometheus<br/>Metrics"]
+        Grafana["Grafana<br/>Dashboards"]
+
+        OTel --> Prometheus --> Grafana
+    end
+
+    API -. "composition root" .-> Infrastructure
+    Infrastructure -. "implements ports" .-> Application
+    API -->|"OTLP telemetry"| OTel
+
+    classDef frontend fill:#FFF3DF,stroke:#D2772A,color:#3B2418,stroke-width:2px;
+    classDef backend fill:#F7C65A,stroke:#9B4D16,color:#302116,stroke-width:2px;
+    classDef core fill:#E7F0E7,stroke:#315C46,color:#17372A,stroke-width:2px;
+    classDef adapter fill:#F9E7CC,stroke:#B86A28,color:#3B2418,stroke-width:2px;
+    classDef data fill:#DDEADF,stroke:#315C46,color:#17372A,stroke-width:2px;
+    classDef observe fill:#E9E2F4,stroke:#6B5590,color:#2F2442,stroke-width:2px;
+
+    class Browser frontend;
+    class API backend;
+    class Application,Domain core;
+    class Infrastructure adapter;
+    class PostgreSQL data;
+    class OTel,Prometheus,Grafana observe;
+
+    style Product fill:#FFFBF4,stroke:#E8C99E,stroke-width:1px,color:#3B2418;
+    style Persistence fill:#FAF5EC,stroke:#D8B889,stroke-width:1px,color:#3B2418;
+    style Observability fill:#F7F3FB,stroke:#CFC1E2,stroke-width:1px,color:#2F2442;
 ```
 
 Browser-facing controllers depend only on Application contracts. Database queries, privacy persistence,
