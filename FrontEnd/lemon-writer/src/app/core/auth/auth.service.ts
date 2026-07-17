@@ -20,7 +20,18 @@ export class AuthService {
   }
 
   get isLoggedIn(): boolean {
-    return !!this.token && !!this._currentUser();
+    return this.hasValidToken() && !!this._currentUser();
+  }
+
+  hasValidToken(): boolean {
+    const token = this.token;
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: number };
+      return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now() + 5_000;
+    } catch {
+      return false;
+    }
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
@@ -36,7 +47,7 @@ export class AuthService {
   }
 
   loginWithGoogle(): void {
-    window.location.href = `${environment.apiUrl}/auth/google`;
+    window.location.href = `${environment.apiUrl}/auth/oauth/google`;
   }
 
   handleGoogleCallback(token: string, user: User): void {
@@ -48,6 +59,14 @@ export class AuthService {
     localStorage.removeItem(this.USER_KEY);
     this._currentUser.set(null);
     this.router.navigate(['/auth/login']);
+  }
+
+  clearInvalidSession(): void {
+    if (!this.token && !this._currentUser()) return;
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+    this._currentUser.set(null);
+    void this.router.navigate(['/auth/login'], { queryParams: { sessionExpired: true } });
   }
 
   private handleAuthSuccess(response: AuthResponse): void {

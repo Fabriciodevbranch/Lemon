@@ -38,6 +38,14 @@
         <span class="chapter-count">{{ book.chapterCount }} chapters</span>
       }
     </div>
+    <div class="story-context" aria-label="Book activity">
+      <span><mat-icon>schedule</mat-icon>Edited {{ relativeDate(book.updatedAt) }}</span>
+      @if (book.wordCount !== undefined) { <span><mat-icon>notes</mat-icon>{{ book.wordCount | number }} words</span> }
+      @if (book.progress !== undefined) {
+        <span><mat-icon>donut_large</mat-icon>{{ book.progress }}% complete</span>
+        <div class="mini-progress"><i [style.width.%]="book.progress"></i></div>
+      }
+    </div>
   </mat-card-content>
 
   <mat-card-actions>

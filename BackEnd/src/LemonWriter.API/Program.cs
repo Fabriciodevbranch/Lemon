@@ -5,6 +5,7 @@ using LemonWriter.Infrastructure;
 using LemonWriter.Infrastructure.Data;
 using LemonWriter.Infrastructure.gRPC;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -35,6 +36,8 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Controllers
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<LemonDbContext>("postgres", tags: new[] { "ready" });
 
 // gRPC
 builder.Services.AddGrpc();
@@ -82,10 +85,17 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     })
+    .AddCookie("External", options =>
+    {
+        options.Cookie.Name = "lemon.external";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+    })
     .AddGoogle(options =>
     {
+        options.SignInScheme = "External";
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "placeholder-client-id";
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "placeholder-client-secret";
+        options.CallbackPath = "/api/auth/oauth/google/callback";
     });
 
 builder.Services.AddAuthorization();
@@ -121,6 +131,7 @@ builder.Services.AddOpenTelemetry()
         metrics
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddPrometheusExporter()
             .AddOtlpExporter(opts => opts.Endpoint = new Uri(otelEndpoint));
     });
 
@@ -150,5 +161,14 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapGrpcService<BooksGrpcService>();
 app.MapGrpcService<ChaptersGrpcService>();
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();

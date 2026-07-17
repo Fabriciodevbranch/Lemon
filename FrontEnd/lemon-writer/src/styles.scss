@@ -1,4 +1,4 @@
-// Angular Material theming - M3 API (Angular Material 20)
+// Angular Material theming (Material 3)
 @use '@angular/material' as mat;
 
 // Import our themes and utilities
@@ -32,8 +32,14 @@ html {
   --text-secondary: #7a5c45;
   --border-color: #e8d9c4;
   --shadow-color: rgba(100, 60, 20, 0.12);
-  --font-heading: 'Georgia', 'Times New Roman', serif;
-  --font-body: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  --surface-raised: #fffdf9;
+  --danger-color: #b42318;
+  --success-color: #16794b;
+  --content-wide: 1440px;
+  --content-reading: 820px;
+  --nav-height: 68px;
+  --font-heading: 'Newsreader', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
 }
 
 // Global reset and base styles
@@ -47,6 +53,8 @@ html, body {
   padding: 0;
 }
 
+html { scroll-behavior: smooth; }
+
 body {
   background-color: var(--bg-color);
   color: var(--text-primary);
@@ -54,11 +62,169 @@ body {
   font-size: 16px;
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
+  min-width: 320px;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--text-primary);
+}
+
+h1, h2, h3, p { text-wrap: pretty; }
+button, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+img { max-width: 100%; }
+
+// Angular Material's mat-icon defaults to the legacy "Material Icons" family.
+// The application loads Material Symbols, so explicitly bind ligatures to it.
+.mat-icon,
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  --mat-button-protected-container-color: var(--primary-color);
+  --mat-button-protected-label-text-color: #fffaf4;
+}
+
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button {
+  border-radius: 11px !important;
+  min-height: 42px;
+}
+
+.page-shell {
+  width: min(calc(100% - 48px), var(--content-wide));
+  margin-inline: auto;
+  padding-block: clamp(24px, 4vw, 52px) 64px;
+}
+
+.page-shell--narrow { max-width: var(--content-reading); }
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: clamp(24px, 4vw, 40px);
+}
+
+.page-heading { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.page-title { margin: 0; font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1.15; letter-spacing: -.025em; }
+.page-subtitle { margin: 8px 0 0; color: var(--text-secondary); max-width: 62ch; }
+.page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.surface {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px -20px var(--shadow-color), 0 2px 8px -6px var(--shadow-color);
+}
+
+.loading-state, .error-state, .empty-state {
+  min-height: 340px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--border-color);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-color) 70%, transparent);
+}
+.empty-state h2, .empty-state p, .error-state p { margin: 0; }
+.empty-state p, .error-state p { color: var(--text-secondary); max-width: 46ch; }
+.state-icon { font-size: 42px !important; width: 42px !important; height: 42px !important; color: var(--primary-color); }
+
+.mat-mdc-dialog-surface { border-radius: 20px !important; background: var(--surface-color) !important; }
+.mat-mdc-form-field { max-width: 100%; }
+
+// Material components are rendered with MDC tokens that do not automatically
+// follow our runtime CSS themes. These semantic overrides preserve contrast for
+// all prebuilt and user-created themes.
+.mat-mdc-button:not(:disabled),
+.mat-mdc-icon-button:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.mat-mdc-outlined-button:not(:disabled) {
+  color: var(--primary-color);
+  border-color: var(--border-color);
+}
+
+.mat-mdc-button:disabled,
+.mat-mdc-raised-button:disabled,
+.mat-mdc-outlined-button:disabled,
+.mat-mdc-icon-button:disabled {
+  color: color-mix(in srgb, var(--text-secondary) 65%, transparent) !important;
+}
+
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-input-text-color: var(--text-primary);
+  --mdc-outlined-text-field-label-text-color: var(--text-secondary);
+  --mdc-outlined-text-field-hover-label-text-color: var(--text-primary);
+  --mdc-outlined-text-field-outline-color: var(--border-color);
+  --mdc-outlined-text-field-hover-outline-color: var(--text-secondary);
+  --mdc-outlined-text-field-focus-outline-color: var(--primary-color);
+  --mdc-outlined-text-field-focus-label-text-color: var(--primary-color);
+  --mdc-outlined-text-field-error-label-text-color: var(--danger-color);
+  --mdc-outlined-text-field-error-outline-color: var(--danger-color);
+  --mdc-outlined-text-field-error-hover-outline-color: var(--danger-color);
+  --mdc-outlined-text-field-error-focus-outline-color: var(--danger-color);
+  --mat-form-field-leading-icon-color: var(--text-secondary);
+  --mat-form-field-error-text-color: var(--danger-color);
+}
+
+.mat-mdc-input-element,
+.mat-mdc-select-value,
+.mat-mdc-select-arrow,
+.mat-mdc-form-field-icon-prefix,
+.mat-mdc-form-field-icon-suffix {
+  color: var(--text-primary) !important;
+}
+
+.mat-button-toggle-group {
+  border-color: var(--border-color) !important;
+}
+
+.mat-button-toggle {
+  color: var(--text-primary) !important;
+  background: var(--surface-color);
+  border-color: var(--border-color) !important;
+}
+
+.mat-button-toggle-checked {
+  color: var(--text-primary) !important;
+  background: var(--primary-light) !important;
+}
+
+@media (max-width: 720px) {
+  .page-shell { width: min(calc(100% - 32px), var(--content-wide)); padding-block: 24px 44px; }
+  .page-header { flex-direction: column; gap: 18px; }
+  .page-actions { width: 100%; }
+  .page-actions > button, .page-actions > a { flex: 1 1 auto; }
+}
+
+@media (max-width: 480px) {
+  .page-shell { width: min(calc(100% - 24px), var(--content-wide)); }
+  .page-heading > a[mat-icon-button] { margin-left: -8px; }
 }
 
 a {
@@ -74,3 +240,68 @@ a {
   border-radius: 3px;
   &:hover { background: var(--text-secondary); }
 }
+
+.studio-card, .metrics-grid article, .relationship-canvas { box-shadow: 0 9px 26px -22px var(--shadow-color), 0 2px 8px -7px var(--shadow-color); }
+.metrics-consent { display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:22px;padding:28px; }
+.metrics-consent > mat-icon { width:42px;height:42px;font-size:42px;color:var(--primary-color); }
+.metrics-consent h2, .metrics-consent p { margin:0; }
+.metrics-consent p { margin-top:6px;max-width:70ch;color:var(--text-secondary); }
+.metrics-consent .metrics-error { margin-top:10px;color:var(--danger-color);font-weight:600; }
+.health-list { grid-column:span 2; }
+.health-list ul { margin:12px 0 0;padding-left:20px;color:var(--text-secondary); }
+.metrics-disable { grid-column:1/-1;justify-self:start;border:0;background:transparent;color:var(--text-secondary);text-decoration:underline;cursor:pointer; }
+@media (max-width:700px) { .metrics-consent { grid-template-columns:1fr; } .health-list { grid-column:auto; } }
+
+.timeline-board { position:relative;display:grid;gap:18px;padding:14px 0; }
+.timeline-spine { position:absolute;top:0;bottom:0;left:50%;width:2px;transform:translateX(-50%);background:linear-gradient(var(--primary-light),var(--primary-color),var(--primary-light)); }
+.timeline-event { position:relative;display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);align-items:center;min-height:130px; }
+.timeline-event .timeline-panel { position:relative;grid-column:1;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 20px;width:100%;min-height:86px;padding:18px 58px 18px 22px;border:1px solid var(--border-color);border-radius:17px;background:var(--surface-color);color:var(--text-primary);text-align:left;cursor:pointer;box-shadow:0 10px 28px -22px var(--shadow-color); }
+.timeline-event .timeline-panel:hover { border-color:var(--primary-color);transform:translateY(-1px); }
+.timeline-event--right .timeline-panel { grid-column:3; }
+.timeline-node { z-index:2;grid-column:2;grid-row:1;display:grid;place-items:center;justify-self:center;width:38px;height:38px;border:5px solid var(--bg-color);border-radius:50%;background:var(--primary-color);color:#fff;font-weight:800;box-sizing:content-box; }
+.timeline-handle { position:absolute;z-index:3;top:50%;left:50%;transform:translate(-50%,-42px);display:grid;place-items:center;width:34px;height:28px;color:var(--text-secondary);cursor:grab; }
+.timeline-handle:active { cursor:grabbing; }
+.timeline-panel strong { grid-column:1;font:700 1.25rem var(--font-heading); }
+.timeline-open { grid-column:2;grid-row:1/3;color:var(--primary-color); }
+.timeline-panel > p:last-of-type { margin:0;color:var(--text-secondary); }
+.timeline-era { margin:0;color:var(--primary-color);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase; }
+.timeline-help { display:flex;align-items:center;justify-content:center;gap:7px;margin:24px 0;color:var(--text-secondary);font-size:.85rem; }
+.timeline-help mat-icon { width:18px;height:18px;font-size:18px; }
+.timeline-board .cdk-drag-preview { border-radius:17px;box-shadow:0 22px 60px rgba(0,0,0,.2); }
+.timeline-board .cdk-drag-placeholder { opacity:.25; }
+.timeline-board .cdk-drag-animating,.timeline-board.cdk-drop-list-dragging .timeline-event:not(.cdk-drag-placeholder) { transition:transform 220ms cubic-bezier(0,0,.2,1); }
+@media (max-width:760px) { .timeline-spine{left:20px}.timeline-event{grid-template-columns:46px minmax(0,1fr)}.timeline-event .timeline-panel,.timeline-event--right .timeline-panel{grid-column:2}.timeline-node{grid-column:1}.timeline-handle{left:20px}.timeline-panel{margin-left:8px} }
+
+.studio-modal select[multiple] { min-height:110px;padding:6px; }
+.studio-modal select[multiple] option { padding:7px 8px;border-radius:5px; }
+.event-detail { width:min(100%,760px);max-height:88dvh;overflow:auto;padding:30px;border:1px solid var(--border-color);border-radius:22px;background:var(--surface-color);box-shadow:0 30px 90px rgba(0,0,0,.28); }
+.event-detail header { display:flex;justify-content:space-between;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--border-color); }
+.event-detail h2 { margin:0;font-size:clamp(2rem,4vw,3rem);line-height:1.1; }
+.event-detail h3 { display:flex;align-items:center;gap:7px;margin:0 0 7px;font-size:.83rem;letter-spacing:.06em;text-transform:uppercase;color:var(--primary-color); }
+.event-detail h3 mat-icon { width:18px;height:18px;font-size:18px; }
+.event-detail section { margin-top:22px; }
+.event-detail section p { margin:0;color:var(--text-secondary);white-space:pre-wrap; }
+.event-date { display:flex;align-items:center;gap:7px;margin:10px 0 0;color:var(--text-secondary); }
+.event-date mat-icon { width:17px;height:17px;font-size:17px; }
+.event-relations { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
+.event-relations section { padding:15px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-color); }
+.event-impact { padding:18px;border-radius:14px;background:var(--primary-light); }
+@media (max-width:640px) { .event-detail{padding:22px}.event-relations{grid-template-columns:1fr} }
+
+.goals-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px; }
+.goal-card { padding:24px;border:1px solid var(--border-color);border-radius:18px;background:var(--surface-color);box-shadow:0 9px 26px -22px var(--shadow-color); }
+.goal-card header { position:relative;display:flex;align-items:center;gap:13px;padding-right:36px; }
+.goal-card header h2 { margin:0;font-size:1.4rem; }
+.goal-icon { display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:var(--primary-light);color:var(--primary-color); }
+.goal-card > p { color:var(--text-secondary); }
+.goal-numbers { display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:7px;margin-top:22px; }
+.goal-numbers strong { font:700 1.7rem var(--font-heading); }
+.goal-numbers span { color:var(--text-secondary);font-size:.82rem; }
+.goal-numbers b { color:var(--primary-color); }
+.goal-progress { height:9px;overflow:hidden;margin:8px 0 20px;border-radius:10px;background:var(--primary-light); }
+.goal-progress i { display:block;height:100%;border-radius:inherit;background:var(--primary-color);transition:width .3s ease; }
+.goal-card label { display:grid;grid-template-columns:1fr auto;gap:8px;color:var(--text-secondary);font-size:.78rem; }
+.goal-card label input { grid-row:2;padding:10px 12px;border:1px solid var(--border-color);border-radius:9px;background:var(--bg-color);color:var(--text-primary); }
+.goal-card label button { grid-row:2;padding:0 15px;border:0;border-radius:9px;background:var(--primary-color);color:#fff;font-weight:700;cursor:pointer; }
+.goal-complete { border-color:color-mix(in srgb,var(--success-color) 55%,var(--border-color)); }
+.goal-complete .goal-icon { background:color-mix(in srgb,var(--success-color) 18%,var(--surface-color));color:var(--success-color); }

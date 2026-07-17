@@ -10,6 +10,7 @@ export const authGuard: CanActivateFn = (_route, _state) => {
     return true;
   }
 
+  auth.clearInvalidSession();
   router.navigate(['/auth/login']);
   return false;
 };

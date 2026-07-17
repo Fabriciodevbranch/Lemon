@@ -53,3 +53,9 @@
 
 .loading-state { display: flex; justify-content: center; padding: 40px; }
 .error-state { text-align: center; color: var(--text-secondary); padding: 40px; }
+
+@media (max-width: 600px) {
+  .compare-view { padding: 18px 14px; }
+  .compare-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; }
+  .diff-content { overflow-wrap: anywhere; }
+}

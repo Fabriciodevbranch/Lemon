@@ -1,20 +1,10 @@
 .settings-page {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 32px 24px;
-
-  .page-title {
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    color: var(--text-primary);
-    margin: 0 0 32px;
-  }
 }
 
 .settings-grid { display: flex; flex-direction: column; gap: 0; }
 
 .settings-section {
-  padding: 32px 0;
+  padding: 32px;
 
   h2 {
     font-family: var(--font-heading);
@@ -25,6 +15,8 @@
 
   .section-desc { color: var(--text-secondary); margin: 0 0 24px; }
 }
+.settings-grid { border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; background: var(--surface-color); }
+@media (max-width: 560px) { .settings-section { padding: 24px 18px; } }
 
 .profile-form {
   display: flex;

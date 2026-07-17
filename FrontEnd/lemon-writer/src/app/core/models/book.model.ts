@@ -13,6 +13,8 @@ export interface Book {
   createdAt: string;
   updatedAt: string;
   chapterCount?: number;
+  wordCount?: number;
+  progress?: number;
 }
 
 export interface CreateBookRequest {

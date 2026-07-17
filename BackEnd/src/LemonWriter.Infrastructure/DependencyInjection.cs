@@ -7,6 +7,7 @@ using LemonWriter.Infrastructure.Services.Export;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace LemonWriter.Infrastructure;
 
@@ -15,8 +16,10 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<LemonDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")));
+            options
+                .UseNpgsql(configuration.GetConnectionString("DefaultConnection")
+                    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured."))
+                .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
         services.AddScoped<LemonWriter.Domain.Interfaces.IUnitOfWork>(sp => sp.GetRequiredService<LemonDbContext>());
 

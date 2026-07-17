@@ -1,26 +1,29 @@
 <mat-toolbar class="navbar">
-  <a routerLink="/library" class="brand">
-    <mat-icon>auto_stories</mat-icon>
-    <span>Lemon Writer</span>
-  </a>
+  <div class="navbar-inner">
+    <a routerLink="/library" class="brand" aria-label="Lemon Writer home">
+      <span class="brand-mark"><mat-icon>auto_stories</mat-icon></span>
+      <span>Lemon Writer</span>
+    </a>
 
   <span class="spacer"></span>
 
   @if (currentUser()) {
-    <button mat-button routerLink="/library" routerLinkActive="active">My Library</button>
-    <button mat-button routerLink="/settings" routerLinkActive="active">
+    <div class="nav-actions">
+    <button mat-button routerLink="/library" routerLinkActive="active" class="library-link">Library</button>
+    <button mat-icon-button routerLink="/settings" routerLinkActive="active" aria-label="Settings">
       <mat-icon>settings</mat-icon>
     </button>
-    <button mat-icon-button [matMenuTriggerFor]="userMenu">
-      <mat-icon>account_circle</mat-icon>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Account menu" class="avatar-button">
+      <span>{{ currentUser()?.displayName?.charAt(0) }}</span>
     </button>
     <mat-menu #userMenu="matMenu">
       <button mat-menu-item disabled>{{ currentUser()?.displayName }}</button>
       <button mat-menu-item routerLink="/settings">Settings</button>
       <button mat-menu-item (click)="logout()">Sign Out</button>
-    </mat-menu>
+    </mat-menu></div>
   } @else {
     <button mat-button routerLink="/auth/login">Sign In</button>
     <button mat-raised-button color="primary" routerLink="/auth/register">Get Started</button>
   }
+  </div>
 </mat-toolbar>

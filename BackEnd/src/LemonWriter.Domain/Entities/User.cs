@@ -10,6 +10,8 @@ public class User : AggregateRoot<Guid>
     public string? OAuthProviderId { get; private set; }
     public string? PasswordHash { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public bool IncludeExportBranding { get; private set; } = true;
+    public bool StoryMetricsEnabled { get; private set; }
 
     private User() { }
 
@@ -28,9 +30,13 @@ public class User : AggregateRoot<Guid>
             OAuthProvider = oAuthProvider,
             OAuthProviderId = oAuthProviderId,
             PasswordHash = passwordHash,
+            IncludeExportBranding = true,
+            StoryMetricsEnabled = false,
             CreatedAt = DateTime.UtcNow
         };
     }
 
     public void UpdateProfile(string name) => Name = name;
+    public void SetExportBranding(bool include) => IncludeExportBranding = include;
+    public void SetStoryMetrics(bool enabled) => StoryMetricsEnabled = enabled;
 }

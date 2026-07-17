@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,6 +22,7 @@ import { Chapter } from '../../core/models/chapter.model';
     TextFieldModule, NavbarComponent, EditorToolbarComponent
   ],
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './editor.component.scss'
 })
 export class EditorComponent implements OnInit, OnDestroy {

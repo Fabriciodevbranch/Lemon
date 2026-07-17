@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +19,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
   standalone: true,
   imports: [RouterLink, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatProgressSpinnerModule, NavbarComponent, TimeAgoPipe],
   templateUrl: './drafts.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './drafts.component.scss'
 })
 export class DraftsComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -14,6 +14,7 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
   standalone: true,
   imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule, BookCardComponent, NavbarComponent],
   templateUrl: './library.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './library.component.scss'
 })
 export class LibraryComponent implements OnInit {

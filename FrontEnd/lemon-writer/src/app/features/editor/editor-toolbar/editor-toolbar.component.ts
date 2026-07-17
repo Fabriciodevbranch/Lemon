@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +10,7 @@ import { MatDividerModule } from '@angular/material/divider';
   standalone: true,
   imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatTooltipModule, MatDividerModule],
   templateUrl: './editor-toolbar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './editor-toolbar.component.scss'
 })
 export class EditorToolbarComponent {

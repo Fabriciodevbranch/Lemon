@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,6 +21,7 @@ import { Subject, debounceTime, takeUntil } from 'rxjs';
     MatFormFieldModule, MatInputModule, TextFieldModule, NavbarComponent
   ],
   templateUrl: './draft-editor.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './draft-editor.component.scss'
 })
 export class DraftEditorComponent implements OnInit, OnDestroy {

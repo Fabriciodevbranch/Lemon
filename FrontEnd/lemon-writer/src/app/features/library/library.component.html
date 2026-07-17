@@ -1,16 +1,16 @@
 <app-navbar></app-navbar>
 
-<div class="library-container">
-  <div class="library-header">
+<main class="library-container page-shell">
+  <header class="library-header page-header">
     <div>
-      <h1>My Library</h1>
+      <h1 class="page-title">My Library</h1>
       <p class="subtitle">Your stories, all in one place</p>
     </div>
     <button mat-raised-button color="primary" (click)="openCreateDialog()">
       <mat-icon>add</mat-icon>
       New Book
     </button>
-  </div>
+  </header>
 
   @if (loading()) {
     <div class="loading-state">
@@ -39,4 +39,4 @@
       }
     </div>
   }
-</div>
+</main>

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,6 +15,7 @@ import { ExportService } from '../../core/services/export.service';
 import { ChaptersService } from '../../core/services/chapters.service';
 import { Book } from '../../core/models/book.model';
 import { Chapter } from '../../core/models/chapter.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-book-settings',
@@ -24,6 +25,7 @@ import { Chapter } from '../../core/models/chapter.model';
     MatButtonModule, MatIconModule, MatCheckboxModule, MatDividerModule, MatProgressSpinnerModule, MatSnackBarModule
   ],
   templateUrl: './book-settings.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './book-settings.component.scss'
 })
 export class BookSettingsComponent implements OnInit {
@@ -84,24 +86,63 @@ export class BookSettingsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      this.snackBar.open('Choose a JPEG, PNG, WebP, or GIF image.', 'Dismiss', { duration: 5000 });
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      const actualSize = (file.size / 1024 / 1024).toFixed(1);
+      this.snackBar.open(`This image is ${actualSize} MB. Cover images must be 5 MB or smaller.`, 'Dismiss', { duration: 7000 });
+      input.value = '';
+      return;
+    }
+
     this.booksService.uploadCoverImage(this.bookId, file).subscribe({
       next: (res) => {
         const current = this.book();
         if (current) this.book.set({ ...current, coverImageUrl: res.coverImageUrl });
         this.snackBar.open('Cover image updated!', 'Dismiss', { duration: 3000 });
       },
-      error: () => this.snackBar.open('Could not upload cover image.', 'Dismiss', { duration: 3000 })
+      error: (error) => {
+        const message = error?.error?.error || error?.error?.message ||
+          'The cover could not be uploaded. Use JPEG, PNG, WebP, or GIF up to 5 MB.';
+        this.snackBar.open(message, 'Dismiss', { duration: 7000 });
+      }
     });
   }
 
   exportEpub(): void {
-    this.exportService.downloadEpub(this.bookId, this.book()?.title || 'book');
     this.snackBar.open('Preparing EPUB download...', 'Dismiss', { duration: 3000 });
+    this.exportService.downloadEpub(this.bookId, this.book()?.title || 'book').subscribe({
+      next: () => this.snackBar.open('EPUB downloaded successfully.', 'Dismiss', { duration: 3000 }),
+      error: error => this.showExportError(error, 'EPUB')
+    });
   }
 
   exportPdf(): void {
-    this.exportService.downloadPdf(this.bookId, this.book()?.title || 'book');
     this.snackBar.open('Preparing PDF download...', 'Dismiss', { duration: 3000 });
+    this.exportService.downloadPdf(this.bookId, this.book()?.title || 'book').subscribe({
+      next: () => this.snackBar.open('PDF downloaded successfully.', 'Dismiss', { duration: 3000 }),
+      error: error => this.showExportError(error, 'PDF')
+    });
+  }
+
+  private async showExportError(error: HttpErrorResponse, format: string): Promise<void> {
+    let message = `Could not export this book as ${format}. Please try again.`;
+    if (error.error instanceof Blob) {
+      try {
+        const payload = JSON.parse(await error.error.text()) as { error?: string; message?: string };
+        message = payload.error || payload.message || message;
+      } catch { /* Keep the user-friendly fallback for non-JSON server responses. */ }
+    } else if (error.error?.error || error.error?.message) {
+      message = error.error.error || error.error.message;
+    }
+    this.snackBar.open(message, 'Dismiss', { duration: 7000 });
   }
 
   addChapter(): void {

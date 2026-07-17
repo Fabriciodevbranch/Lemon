@@ -1,0 +1,21 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    { "type": "stat", "title": "Request rate", "id": 1, "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 }, "targets": [{ "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\"}[5m]))", "legendFormat": "requests/s" }] },
+    { "type": "stat", "title": "5xx error rate", "id": 2, "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 }, "targets": [{ "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\",http_response_status_code=~\"5..\"}[5m]))", "legendFormat": "errors/s" }] },
+    { "type": "stat", "title": "P95 latency", "id": 3, "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 }, "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p95" }], "fieldConfig": { "defaults": { "unit": "s" } } },
+    { "type": "stat", "title": "Process memory", "id": 4, "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 }, "targets": [{ "expr": "process_memory_usage_bytes{job=\"lemon-api\"}", "legendFormat": "memory" }], "fieldConfig": { "defaults": { "unit": "bytes" } } },
+    { "type": "timeseries", "title": "Traffic by route", "id": 5, "gridPos": { "h": 9, "w": 12, "x": 0, "y": 6 }, "targets": [{ "expr": "sum by (http_route) (rate(http_server_request_duration_seconds_count{job=\"lemon-api\"}[5m]))", "legendFormat": "{{http_route}}" }] },
+    { "type": "timeseries", "title": "Latency percentiles", "id": 6, "gridPos": { "h": 9, "w": 12, "x": 12, "y": 6 }, "targets": [{ "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p50" }, { "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p95" }, { "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p99" }], "fieldConfig": { "defaults": { "unit": "s" } } }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": ["lemon-writer", "aspnetcore", "otel"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Lemon Writer API Overview",
+  "uid": "lemon-api-overview",
+  "version": 1
+}

@@ -1,7 +1,4 @@
 .timeline-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 32px 24px;
 }
 
 .timeline-header {
@@ -22,6 +19,11 @@
 
   .header-actions { display: flex; gap: 8px; align-items: center; }
   button.active { border-color: var(--primary-color); color: var(--primary-color); }
+}
+
+@media (max-width: 640px) {
+  .timeline-header .header-actions { width: 100%; }
+  .timeline-header .header-actions button { flex: 1; }
 }
 
 .timeline-track {

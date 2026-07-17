@@ -20,7 +20,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 16px 24px 24px;
+  padding: 16px max(16px, calc((100vw - 980px) / 2)) 24px;
 }
 
 .editor-field {
@@ -42,6 +42,8 @@
   color: var(--text-primary);
   resize: none;
   min-height: 400px;
+  padding: clamp(18px, 4vw, 48px) !important;
+  background: var(--surface-color);
 }
 
 .loading-overlay {
@@ -55,4 +57,10 @@
     font-family: var(--font-body);
     font-size: 1.1rem;
   }
+}
+
+@media (max-width: 600px) {
+  .editor-container { height: auto; min-height: calc(100dvh - var(--nav-height)); }
+  .chapter-title-bar { padding-inline: 16px; }
+  .editor-wrapper { overflow: visible; padding: 12px; }
 }

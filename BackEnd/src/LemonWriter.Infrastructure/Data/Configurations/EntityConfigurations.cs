@@ -18,7 +18,7 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
             meta.Property(m => m.AuthorName).HasColumnName("AuthorName").HasMaxLength(200);
             meta.Property(m => m.ISBN).HasColumnName("ISBN").HasMaxLength(20);
             meta.Property(m => m.INBR).HasColumnName("INBR").HasMaxLength(20);
-            meta.Property(m => m.CoverImageUrl).HasColumnName("CoverImageUrl").HasMaxLength(2048);
+            meta.Property(m => m.CoverImageUrl).HasColumnName("CoverImageUrl").HasColumnType("text");
             meta.Property(m => m.Description).HasColumnName("MetadataDescription").HasMaxLength(5000);
             meta.Property(m => m.IsSeries).HasColumnName("IsSeries");
             meta.Property(m => m.SeriesVolume).HasColumnName("SeriesVolume");
@@ -86,5 +86,42 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.OAuthProviderId).HasMaxLength(256);
         builder.Property(u => u.PasswordHash).HasMaxLength(512);
         builder.Property(u => u.CreatedAt).IsRequired();
+        builder.Property(u => u.IncludeExportBranding).IsRequired().HasDefaultValue(true);
+        builder.Property(u => u.StoryMetricsEnabled).IsRequired().HasDefaultValue(false);
+    }
+}
+
+public class StoryStudioEntryConfiguration : IEntityTypeConfiguration<StoryStudioEntry>
+{
+    public void Configure(EntityTypeBuilder<StoryStudioEntry> builder)
+    {
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Type).IsRequired().HasMaxLength(32);
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(300);
+        builder.Property(x => x.Summary).HasMaxLength(1000);
+        builder.Property(x => x.Details).HasColumnType("text");
+        builder.Property(x => x.Motivation).HasColumnType("text");
+        builder.Property(x => x.Plot).HasColumnType("text");
+        builder.Property(x => x.ImageData).HasColumnType("text");
+        builder.Property(x => x.SortOrder).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.EventDate).HasMaxLength(100);
+        builder.Property(x => x.Impact).HasColumnType("text");
+        builder.Property(x => x.RelatedCharacterIds).HasColumnType("text");
+        builder.Property(x => x.RelatedObjectIds).HasColumnType("text");
+        builder.Property(x => x.RelatedPlaceIds).HasColumnType("text");
+        builder.Property(x => x.GoalTarget);
+        builder.Property(x => x.GoalProgress).IsRequired().HasDefaultValue(0);
+        builder.HasIndex(x => new { x.BookId, x.Type });
+    }
+}
+
+public class StoryRelationshipConfiguration : IEntityTypeConfiguration<StoryRelationship>
+{
+    public void Configure(EntityTypeBuilder<StoryRelationship> builder)
+    {
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Label).IsRequired().HasMaxLength(300);
+        builder.Property(x => x.Tone).IsRequired().HasMaxLength(20);
+        builder.HasIndex(x => x.BookId);
     }
 }

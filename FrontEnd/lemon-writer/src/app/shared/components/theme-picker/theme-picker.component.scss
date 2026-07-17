@@ -1,7 +1,10 @@
 .theme-picker {
+  mat-button-toggle-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .theme-icon { font-size: 1.2rem; margin-right: 4px; }
   .theme-label { font-size: 0.85rem; }
 }
+
+@media (max-width: 480px) { .theme-picker mat-button-toggle-group { grid-template-columns: 1fr; } }
 
 .custom-colors {
   margin-top: 20px;

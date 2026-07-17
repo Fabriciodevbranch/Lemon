@@ -1,20 +1,34 @@
 <app-navbar></app-navbar>
 
 @if (!loading()) {
-  <div class="settings-container">
-    <div class="settings-header">
+  <main class="settings-container page-shell">
+    <header class="settings-header page-header">
       <a mat-icon-button routerLink="/library" aria-label="Back to library">
         <mat-icon>arrow_back</mat-icon>
       </a>
       <div>
-        <h1>Book Settings</h1>
+        <h1 class="page-title">Book Settings</h1>
         <p class="subtitle">{{ book()?.title }}</p>
       </div>
-    </div>
+    </header>
 
     <div class="settings-layout">
       <!-- Left: Chapters -->
       <aside class="chapters-panel">
+        <div class="studio-links">
+          <p>Story studio</p>
+          <a [routerLink]="['/books', bookId, 'characters']"><mat-icon>group</mat-icon>Characters</a>
+          <a [routerLink]="['/books', bookId, 'relationships']"><mat-icon>hub</mat-icon>Relationships</a>
+          <a [routerLink]="['/books', bookId, 'places']"><mat-icon>landscape</mat-icon>Places</a>
+          <a [routerLink]="['/books', bookId, 'objects']"><mat-icon>deployed_code</mat-icon>Objects</a>
+          <a [routerLink]="['/books', bookId, 'timeline']"><mat-icon>timeline</mat-icon>Timeline</a>
+          <a [routerLink]="['/books', bookId, 'goals']"><mat-icon>flag</mat-icon>Writing Goals</a>
+          <a [routerLink]="['/books', bookId, 'lore']"><mat-icon>auto_stories</mat-icon>Lore & Glossary</a>
+          <a [routerLink]="['/books', bookId, 'magic']"><mat-icon>wand_stars</mat-icon>Magic System</a>
+          <a [routerLink]="['/books', bookId, 'research']"><mat-icon>note_stack</mat-icon>Notes & Research</a>
+          <a [routerLink]="['/books', bookId, 'gallery']"><mat-icon>collections</mat-icon>Gallery</a>
+          <a [routerLink]="['/books', bookId, 'metrics']"><mat-icon>monitoring</mat-icon>Metrics</a>
+        </div>
         <div class="panel-header">
           <h2>Chapters</h2>
           <button mat-icon-button (click)="addChapter()" aria-label="Add chapter">
@@ -51,10 +65,15 @@
               }
               <div>
                 <p class="cover-label">Cover Image</p>
-                <input type="file" #coverInput accept="image/*" (change)="onCoverImageSelected($event)" style="display:none">
+                <input type="file" #coverInput accept="image/jpeg,image/png,image/webp,image/gif" (change)="onCoverImageSelected($event)" style="display:none">
                 <button type="button" mat-stroked-button (click)="coverInput.click()">
                   <mat-icon>upload</mat-icon> Upload Cover
                 </button>
+                <div class="cover-requirements" aria-label="Cover image requirements">
+                  <span><mat-icon>image</mat-icon> JPEG, PNG, WebP or GIF</span>
+                  <span><mat-icon>compress</mat-icon> Maximum 5 MB</span>
+                  <span><mat-icon>aspect_ratio</mat-icon> Recommended 1600 × 2560 px, 5:8 portrait</span>
+                </div>
               </div>
             </div>
 
@@ -125,7 +144,7 @@
         </section>
       </main>
     </div>
-  </div>
+  </main>
 } @else {
   <div class="loading-state">
     <mat-spinner diameter="48"></mat-spinner>

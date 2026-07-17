@@ -15,7 +15,8 @@ public class ExportController : ControllerBase
     public ExportController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet("{bookId:guid}")]
-    public async Task<IActionResult> ExportBook(Guid bookId, [FromQuery] string format = "epub", CancellationToken cancellationToken = default)
+    [HttpGet("/api/books/{bookId:guid}/export/{format}")]
+    public async Task<IActionResult> ExportBook(Guid bookId, string format = "epub", CancellationToken cancellationToken = default)
     {
         var result = await _mediator.Send(new ExportBookCommand(bookId, format), cancellationToken);
         if (result.IsFailure)

@@ -5,24 +5,40 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  height: var(--nav-height);
+  padding: 0;
+  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--surface-color) 90%, transparent);
+
+  .navbar-inner { width: min(calc(100% - 48px), var(--content-wide)); margin: auto; display: flex; align-items: center; height: 100%; }
 
   .brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     text-decoration: none;
     color: var(--primary-color);
     font-family: var(--font-heading);
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 700;
 
-    mat-icon { color: var(--primary-color); }
+    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: white; background: var(--primary-color); box-shadow: 0 8px 18px -10px var(--primary-color); }
+    mat-icon { color: inherit; }
   }
 
   .spacer { flex: 1; }
+  .nav-actions { display: flex; align-items: center; gap: 2px; }
+  .nav-actions > button { min-width: 44px; color: var(--text-primary); }
+  .avatar-button { margin-left: 4px; background: var(--primary-light); color: var(--primary-color); font-weight: 700; }
 
   button.active {
     color: var(--primary-color);
     font-weight: 600;
   }
+}
+
+@media (max-width: 600px) {
+  .navbar .navbar-inner { width: calc(100% - 24px); }
+  .navbar .library-link { display: none; }
+  .navbar .brand { font-size: 1.08rem; }
 }

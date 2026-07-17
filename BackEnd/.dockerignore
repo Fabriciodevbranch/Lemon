@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/TestResults/
+tests/
+.git/
+.gitignore
+src/LemonWriter.API/wwwroot/
+README.md

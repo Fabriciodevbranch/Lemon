@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,7 @@ import { Snapshot } from '../../../core/models/snapshot.model';
   standalone: true,
   imports: [MatCardModule, MatButtonModule, MatIconModule, MatChipsModule, MatTooltipModule, TimeAgoPipe],
   templateUrl: './snapshot-card.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './snapshot-card.component.scss'
 })
 export class SnapshotCardComponent {

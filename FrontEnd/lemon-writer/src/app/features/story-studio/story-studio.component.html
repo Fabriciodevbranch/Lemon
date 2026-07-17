@@ -1,0 +1,166 @@
+<app-navbar></app-navbar>
+
+<main class="studio-shell">
+  <aside class="studio-nav">
+    <a [routerLink]="['/books', bookId, 'settings']" class="back-link"><mat-icon>arrow_back</mat-icon> Book settings</a>
+    <p class="nav-label">Story studio</p>
+    <nav>
+      <a [routerLink]="['/books', bookId, 'characters']" routerLinkActive="active"><mat-icon>group</mat-icon>Characters</a>
+      <a [routerLink]="['/books', bookId, 'relationships']" routerLinkActive="active"><mat-icon>hub</mat-icon>Relationships</a>
+      <a [routerLink]="['/books', bookId, 'places']" routerLinkActive="active"><mat-icon>landscape</mat-icon>Places</a>
+      <a [routerLink]="['/books', bookId, 'objects']" routerLinkActive="active"><mat-icon>deployed_code</mat-icon>Objects</a>
+      <a [routerLink]="['/books', bookId, 'timeline']" routerLinkActive="active"><mat-icon>timeline</mat-icon>Timeline</a>
+      <a [routerLink]="['/books', bookId, 'goals']" routerLinkActive="active"><mat-icon>flag</mat-icon>Writing goals</a>
+      <a [routerLink]="['/books', bookId, 'lore']" routerLinkActive="active"><mat-icon>auto_stories</mat-icon>Lore & glossary</a>
+      <a [routerLink]="['/books', bookId, 'magic']" routerLinkActive="active"><mat-icon>wand_stars</mat-icon>Magic system</a>
+      <a [routerLink]="['/books', bookId, 'research']" routerLinkActive="active"><mat-icon>note_stack</mat-icon>Notes & research</a>
+      <a [routerLink]="['/books', bookId, 'gallery']" routerLinkActive="active"><mat-icon>collections</mat-icon>Gallery</a>
+      <a [routerLink]="['/books', bookId, 'metrics']" routerLinkActive="active"><mat-icon>monitoring</mat-icon>Metrics</a>
+    </nav>
+  </aside>
+
+  <section class="studio-content">
+    <header class="studio-header">
+      <div><p class="eyebrow">{{ meta.eyebrow }}</p><h1>{{ meta.title }}</h1><p>{{ meta.description }}</p></div>
+      @if (mode !== 'metrics') { <button class="create-button" (click)="openCreate()"><mat-icon>add</mat-icon>Add {{ meta.singular }}</button> }
+    </header>
+
+    @if (mode === 'metrics') {
+      @if (!metrics().enabled) {
+        <section class="metrics-consent surface"><mat-icon>privacy_tip</mat-icon><div><h2>Story health is private and optional</h2><p>We measure your story, not your behavior. When enabled, Lemon counts structural elements in this book. It does not track keystrokes, typing speed, reading habits, or use manuscript content for AI training.</p>@if (metricsError()) { <p class="metrics-error" role="alert">{{ metricsError() }}</p> }</div><button class="create-button" [disabled]="metricsSaving()" (click)="setMetricsEnabled(true)">{{ metricsSaving() ? 'Enabling…' : 'Enable story metrics' }}</button></section>
+      } @else { <div class="metrics-grid">
+        <article><span>Characters</span><strong>{{ characterCount() }}</strong><small>people in your cast</small></article>
+        <article><span>Places</span><strong>{{ placeCount() }}</strong><small>documented locations</small></article>
+        <article><span>Objects</span><strong>{{ objectCount() }}</strong><small>tracked story elements</small></article>
+        <article><span>Media</span><strong>{{ galleryCount() }}</strong><small>visual references</small></article>
+        <article class="progress-card"><span>Worldbuilding coverage</span><strong>{{ completeness() }}%</strong><div class="progress"><i [style.width.%]="completeness()"></i></div><small>Add details across the studio to grow coverage.</small></article>
+        <article><span>Character coverage</span><strong>{{ metrics().characterCoverage }}%</strong><small>characters with meaningful detail</small></article>
+        <article><span>Relationship coverage</span><strong>{{ metrics().relationshipCoverage }}%</strong><small>cast connected to another character</small></article>
+        <article><span>Timeline completeness</span><strong>{{ metrics().timelineCompleteness }}%</strong><small>events with useful context</small></article>
+        <article><span>Story completeness</span><strong>{{ metrics().storyCompleteness }}%</strong><small>balanced structural coverage</small></article>
+        <article class="health-list"><span>Novel lint</span><ul><li>{{ metrics().orphanCharacters }} orphan characters</li><li>{{ metrics().emptyLocations }} empty locations</li><li>{{ metrics().unusedObjects }} unused objects</li></ul></article>
+        <button class="metrics-disable" (click)="setMetricsEnabled(false)">Disable story metrics</button>
+      </div> }
+    } @else if (mode === 'relationships') {
+      @if (relationships().length === 0) {
+        <div class="empty-studio"><mat-icon>hub</mat-icon><h2>No connections mapped yet</h2><p>Add characters first, then connect their alliances, conflicts, and history.</p><button (click)="openCreate()">Create a relationship</button></div>
+      } @else {
+        <div class="relationship-canvas">
+          @for (relation of relationships(); track relation.id; let i = $index) {
+            <article class="relationship" [class]="relation.tone">
+              <span class="person">{{ characterName(relation.from).charAt(0) }}</span><strong>{{ characterName(relation.from) }}</strong>
+              <span class="connection"><i></i><em>{{ relation.label }}</em></span>
+              <span class="person alt">{{ characterName(relation.to).charAt(0) }}</span><strong>{{ characterName(relation.to) }}</strong>
+              <button class="delete" (click)="removeRelationship(relation.id)" aria-label="Delete relationship"><mat-icon>close</mat-icon></button>
+            </article>
+          }
+        </div>
+      }
+    } @else if (mode === 'goals') {
+      @if (items().length === 0) {
+        <div class="empty-studio"><mat-icon>flag</mat-icon><h2>Give your writing a gentle destination</h2><p>Set a word-count milestone and optional deadline. Small, visible progress is still progress.</p><button (click)="openCreate()">Create your first goal</button></div>
+      } @else {
+        <div class="goals-grid">
+          @for (item of items(); track item.id) {
+            <article class="goal-card" [class.goal-complete]="goalPercent(item) === 100">
+              <header><span class="goal-icon"><mat-icon>{{ goalPercent(item) === 100 ? 'check' : 'flag' }}</mat-icon></span><div><p class="eyebrow">{{ item.eventDate || 'No deadline' }}</p><h2>{{ item.name }}</h2></div><button class="delete" (click)="remove(item.id)" aria-label="Delete goal"><mat-icon>delete</mat-icon></button></header>
+              @if (item.details) { <p>{{ item.details }}</p> }
+              <div class="goal-numbers"><strong>{{ item.goalProgress || 0 | number }}</strong><span>of {{ item.goalTarget || 0 | number }} words</span><b>{{ goalPercent(item) }}%</b></div>
+              <div class="goal-progress"><i [style.width.%]="goalPercent(item)"></i></div>
+              <label>Update progress<input #progress type="number" min="0" [max]="item.goalTarget" [value]="item.goalProgress || 0"><button (click)="updateGoal(item, progress.value)">Save</button></label>
+            </article>
+          }
+        </div>
+      }
+    } @else if (mode === 'timeline') {
+      @if (items().length === 0) {
+        <div class="empty-studio"><mat-icon>timeline</mat-icon><h2>Your chronology starts here</h2><p>Add the first turning point, then drag events into the order in which they happen.</p><button (click)="openCreate()">Add your first event</button></div>
+      } @else {
+        <div class="timeline-board" cdkDropList [cdkDropListData]="items()" (cdkDropListDropped)="reorderTimeline($event)">
+          <div class="timeline-spine" aria-hidden="true"></div>
+          @for (item of items(); track item.id; let i = $index) {
+            <article class="timeline-event" cdkDrag [class.timeline-event--right]="i % 2 === 1">
+              <div class="timeline-handle" cdkDragHandle title="Drag to reorder"><mat-icon>drag_indicator</mat-icon></div>
+              <span class="timeline-node">{{ i + 1 }}</span>
+              <button type="button" class="timeline-panel" (click)="openEvent(item)" [attr.aria-label]="'View details for ' + item.name">
+                @if (item.eventDate) { <span class="timeline-era">{{ item.eventDate }}</span> }
+                <strong>{{ item.name }}</strong>
+                <mat-icon class="timeline-open">arrow_forward</mat-icon>
+                <span class="delete" role="button" tabindex="0" (click)="$event.stopPropagation(); remove(item.id)" aria-label="Delete event"><mat-icon>delete</mat-icon></span>
+              </button>
+            </article>
+          }
+        </div>
+        <p class="timeline-help"><mat-icon>drag_indicator</mat-icon>Drag any event to rearrange the chronology. Changes are saved automatically.</p>
+      }
+    } @else {
+      @if (items().length === 0) {
+        <div class="empty-studio"><mat-icon>{{ meta.icon }}</mat-icon><h2>Your {{ meta.title.toLowerCase() }} will live here</h2><p>Capture an idea now. You can keep shaping it as the story develops.</p><button (click)="openCreate()">Add your first {{ meta.singular }}</button></div>
+      } @else {
+        <div class="item-grid">
+          @for (item of items(); track item.id) {
+            <article class="studio-card">
+              @if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }
+              <div class="card-body"><p class="eyebrow">{{ meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>
+                @if (item.motivation) { <dl><dt>Motivation</dt><dd>{{ item.motivation }}</dd></dl> }
+                @if (item.plot) { <dl><dt>Plot role</dt><dd>{{ item.plot }}</dd></dl> }
+              </div>
+              <button class="delete" (click)="remove(item.id)" aria-label="Delete"><mat-icon>delete</mat-icon></button>
+            </article>
+          }
+        </div>
+      }
+    }
+  </section>
+</main>
+
+@if (dialogOpen()) {
+  <div class="modal-backdrop" (click)="closeCreate()">
+    <section class="studio-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header><div><p class="eyebrow">New entry</p><h2>Add {{ meta.singular }}</h2></div><button class="icon-button" (click)="closeCreate()"><mat-icon>close</mat-icon></button></header>
+      @if (mode === 'relationships') {
+        <label>From<select [(ngModel)]="relationshipDraft.from"><option value="">Choose a character</option>@for (item of items(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+        <label>To<select [(ngModel)]="relationshipDraft.to"><option value="">Choose a character</option>@for (item of items(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+        <label>Connection<input [(ngModel)]="relationshipDraft.label" placeholder="Mentor, rival, sibling…"></label>
+        <label>Tone<select [(ngModel)]="relationshipDraft.tone"><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Tense</option></select></label>
+        <button class="save-button" (click)="saveRelationship()">Save relationship</button>
+      } @else {
+        @if (mode === 'gallery') { <label class="upload">Image<input type="file" accept="image/*" (change)="onMediaSelected($event)"></label> }
+        <label>{{ mode === 'timeline' ? 'Event title' : 'Name' }}<input [(ngModel)]="draft.name" [placeholder]="mode === 'timeline' ? 'The coronation, first contact…' : 'Name this ' + meta.singular"></label>
+        @if (mode === 'timeline') {
+          <label>Specific date or period (optional)<input [(ngModel)]="draft.eventDate" placeholder="14 March 1928, Third Age, Day 7…"></label>
+          <label>Description<textarea [(ngModel)]="draft.details" rows="4" placeholder="What happens in this event?"></textarea></label>
+          <label>Characters involved<select multiple [(ngModel)]="draft.characterIds">@for (item of timelineCharacters(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+          <label>Objects involved<select multiple [(ngModel)]="draft.objectIds">@for (item of timelineObjects(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+          <label>Scenarios involved<select multiple [(ngModel)]="draft.placeIds">@for (item of timelinePlaces(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+          <label>Impact on the story<textarea [(ngModel)]="draft.impact" rows="3" placeholder="What changes because this happened?"></textarea></label>
+        } @else if (mode === 'goals') {
+          <label>Target word count<input type="number" min="1" [(ngModel)]="draft.goalTarget" placeholder="50,000"></label>
+          <label>Current word count<input type="number" min="0" [(ngModel)]="draft.goalProgress" placeholder="0"></label>
+          <label>Deadline (optional)<input type="date" [(ngModel)]="draft.eventDate"></label>
+          <label>Notes<textarea [(ngModel)]="draft.details" rows="3" placeholder="Why this goal matters, your plan, or a reward…"></textarea></label>
+        } @else {
+          <label>Short summary<input [(ngModel)]="draft.summary" placeholder="A quick reference"></label>
+          <label>Details<textarea [(ngModel)]="draft.details" rows="4" placeholder="Characteristics, attributes, history, atmosphere…"></textarea></label>
+        }
+        @if (mode === 'characters') { <label>Motivation<textarea [(ngModel)]="draft.motivation" rows="2"></textarea></label><label>Plot involvement<textarea [(ngModel)]="draft.plot" rows="2"></textarea></label> }
+        <button class="save-button" (click)="saveItem()">Save {{ meta.singular }}</button>
+      }
+    </section>
+  </div>
+}
+
+@if (selectedEvent(); as event) {
+  <div class="modal-backdrop" (click)="closeEvent()">
+    <article class="event-detail" role="dialog" aria-modal="true" [attr.aria-label]="event.name" (click)="$event.stopPropagation()">
+      <header><div><p class="eyebrow">Timeline event</p><h2>{{ event.name }}</h2>@if (event.eventDate) { <p class="event-date"><mat-icon>calendar_today</mat-icon>{{ event.eventDate }}</p> }</div><button class="icon-button" (click)="closeEvent()"><mat-icon>close</mat-icon></button></header>
+      <section><h3>Description</h3><p>{{ event.details || 'No description added yet.' }}</p></section>
+      <div class="event-relations">
+        <section><h3><mat-icon>group</mat-icon>Characters</h3><p>{{ relatedNames(event.characterIds, timelineCharacters()) }}</p></section>
+        <section><h3><mat-icon>deployed_code</mat-icon>Objects</h3><p>{{ relatedNames(event.objectIds, timelineObjects()) }}</p></section>
+        <section><h3><mat-icon>landscape</mat-icon>Scenarios</h3><p>{{ relatedNames(event.placeIds, timelinePlaces()) }}</p></section>
+      </div>
+      <section class="event-impact"><h3><mat-icon>crisis_alert</mat-icon>Impact on the story</h3><p>{{ event.impact || 'No impact documented yet.' }}</p></section>
+    </article>
+  </div>
+}

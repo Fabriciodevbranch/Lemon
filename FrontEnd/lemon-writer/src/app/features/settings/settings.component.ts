@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,6 +14,7 @@ import { ThemePickerComponent } from '../../shared/components/theme-picker/theme
   standalone: true,
   imports: [ReactiveFormsModule, NavbarComponent, ThemePickerComponent, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatDividerModule, MatSnackBarModule],
   templateUrl: './settings.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './settings.component.scss'
 })
 export class SettingsComponent {

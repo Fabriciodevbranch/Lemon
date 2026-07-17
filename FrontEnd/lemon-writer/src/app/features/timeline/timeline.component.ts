@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +15,7 @@ import { Snapshot } from '../../core/models/snapshot.model';
   standalone: true,
   imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, NavbarComponent, SnapshotCardComponent, CompareViewComponent],
   templateUrl: './timeline.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './timeline.component.scss'
 })
 export class TimelineComponent implements OnInit {

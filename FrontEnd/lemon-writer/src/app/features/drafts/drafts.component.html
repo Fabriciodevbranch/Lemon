@@ -1,20 +1,20 @@
 <app-navbar></app-navbar>
 
-<div class="drafts-container">
-  <div class="drafts-header">
+<main class="drafts-container page-shell page-shell--narrow">
+  <header class="drafts-header page-header">
     <div class="header-left">
       <a mat-icon-button [routerLink]="['/books', bookId, 'chapters', chapterId, 'edit']">
         <mat-icon>arrow_back</mat-icon>
       </a>
       <div>
-        <h1>Drafts</h1>
+        <h1 class="page-title">Drafts</h1>
         <p class="subtitle">Experimental versions of this chapter</p>
       </div>
     </div>
     <button mat-raised-button color="primary" (click)="createDraft()">
       <mat-icon>add</mat-icon> New Draft
     </button>
-  </div>
+  </header>
 
   @if (loading()) {
     <div class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
@@ -65,4 +65,4 @@
       }
     </div>
   }
-</div>
+</main>

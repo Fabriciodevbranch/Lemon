@@ -1,6 +1,8 @@
 .book-card {
   background: var(--surface-color);
-  border-radius: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px -20px var(--shadow-color), 0 2px 7px -6px var(--shadow-color);
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
@@ -9,6 +11,8 @@
     transform: translateY(-4px);
     box-shadow: 0 12px 40px var(--shadow-color);
   }
+
+  &:focus-within { outline: 3px solid var(--primary-light); outline-offset: 2px; }
 
   .cover-image {
     height: 200px;
@@ -64,6 +68,11 @@
   }
 
   .chapter-count { font-size: 0.8rem; color: var(--text-secondary); }
+  .story-context { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-color);color:var(--text-secondary);font-size:.75rem; }
+  .story-context span { display:flex;align-items:center;gap:5px; }
+  .story-context mat-icon { width:15px;height:15px;font-size:15px; }
+  .mini-progress { grid-column:1/-1;height:5px;overflow:hidden;border-radius:8px;background:var(--primary-light); }
+  .mini-progress i { display:block;height:100%;background:var(--primary-color); }
 
   .delete-item { color: #f44336; }
 }

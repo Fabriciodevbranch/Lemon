@@ -25,6 +25,12 @@
   }
 }
 
+@media (max-width: 560px) {
+  .snapshot-card { margin-left: 10px; }
+  .snapshot-card::before { left: -17px; }
+  .version-actions button { flex: 1; }
+}
+
 .card-header {
   display: flex;
   gap: 12px;

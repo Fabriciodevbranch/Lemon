@@ -3,6 +3,8 @@ using LemonWriter.Application.Books.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LemonWriter.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LemonWriter.API.Controllers;
 
@@ -12,19 +14,30 @@ namespace LemonWriter.API.Controllers;
 public class BooksController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IWebHostEnvironment _env;
-
-    public BooksController(IMediator mediator, IWebHostEnvironment env)
-    {
-        _mediator = mediator;
-        _env = env;
-    }
+    private readonly LemonDbContext _db;
+    public BooksController(IMediator mediator, LemonDbContext db) { _mediator = mediator; _db = db; }
 
     [HttpGet]
     public async Task<IActionResult> GetBooks([FromQuery] Guid authorId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetBooksQuery(authorId), cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error!.Message });
+        if (result.IsFailure) return NotFound(new { error = result.Error!.Message });
+        var bookIds = result.Value!.Select(x => x.Id).ToArray();
+        var chapters = await _db.Chapters.AsNoTracking().Where(x => bookIds.Contains(x.BookId))
+            .Select(x => new { x.BookId, x.CurrentContent }).ToListAsync(cancellationToken);
+        var stats = chapters.GroupBy(x => x.BookId).ToDictionary(x => x.Key, x => new
+        {
+            ChapterCount = x.Count(),
+            WordCount = x.Sum(chapter => string.IsNullOrWhiteSpace(chapter.CurrentContent) ? 0 : chapter.CurrentContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length)
+        });
+        return Ok(result.Value!.Select(book => new
+        {
+            book.Id, book.Title, book.Description, book.AuthorId, book.ISBN, book.INBR, book.AuthorName,
+            book.CoverImageUrl, book.IsSeries, book.SeriesVolume, book.SeriesName, book.CreatedAt, book.UpdatedAt,
+            ChapterCount = stats.GetValueOrDefault(book.Id)?.ChapterCount ?? 0,
+            WordCount = stats.GetValueOrDefault(book.Id)?.WordCount ?? 0,
+            Progress = Math.Min(100, (stats.GetValueOrDefault(book.Id)?.WordCount ?? 0) / 800)
+        }));
     }
 
     [HttpGet("{id:guid}")]
@@ -71,38 +84,16 @@ public class BooksController : ControllerBase
         if (cover is null || cover.Length == 0)
             return BadRequest(new { error = "No file provided." });
 
+        if (cover.Length > 5 * 1024 * 1024)
+            return BadRequest(new { error = "Cover images must be 5 MB or smaller." });
+
         var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
         if (!allowedTypes.Contains(cover.ContentType))
             return BadRequest(new { error = "Invalid file type. Only JPEG, PNG, GIF and WebP are allowed." });
 
-        var allowedExtensions = new Dictionary<string, string>
-        {
-            { "image/jpeg", ".jpg" },
-            { "image/png", ".png" },
-            { "image/gif", ".gif" },
-            { "image/webp", ".webp" }
-        };
-        var ext = allowedExtensions[cover.ContentType];
-
-        var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-        var coversDir = Path.Combine(webRoot, "covers");
-        Directory.CreateDirectory(coversDir);
-
-        // Remove any existing cover files for this book
-        foreach (var existing in Directory.GetFiles(coversDir, $"{id}.*"))
-        {
-            System.IO.File.Delete(existing);
-        }
-
-        var fileName = $"{id}{ext}";
-        var filePath = Path.Combine(coversDir, fileName);
-
-        await using (var stream = System.IO.File.Create(filePath))
-        {
-            await cover.CopyToAsync(stream, cancellationToken);
-        }
-
-        var coverImageUrl = $"/covers/{fileName}";
+        await using var stream = new MemoryStream();
+        await cover.CopyToAsync(stream, cancellationToken);
+        var coverImageUrl = $"data:{cover.ContentType};base64,{Convert.ToBase64String(stream.ToArray())}";
 
         var bookResult = await _mediator.Send(new GetBookByIdQuery(id), cancellationToken);
         if (bookResult.IsFailure)

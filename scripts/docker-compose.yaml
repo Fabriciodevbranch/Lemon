@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
@@ -13,11 +11,134 @@ services:
       - "5432:5432"
     volumes:
       - lemon_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lemon -d lemondb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - lemon_net
+
+  backend:
+    build:
+      context: ../BackEnd
+      dockerfile: Dockerfile
+    container_name: lemon-backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=lemondb;Username=lemon;Password=lemon
+      Jwt__Key: ${JWT_KEY:-local-development-secret-key-change-before-production}
+      Jwt__Issuer: LemonWriter
+      Jwt__Audience: LemonWriterClient
+      Jwt__ExpiryMinutes: 480
+      Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-placeholder-client-id}
+      Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-placeholder-client-secret}
+      Frontend__BaseUrl: http://localhost:4200
+      Cors__AllowedOrigins__0: http://localhost:4200
+      OpenTelemetry__Endpoint: http://otel-collector:4317
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lemon_net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../BackEnd
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.128.0
+    container_name: lemon-otel
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./observability/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - lemon_net
+
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    container_name: lemon-prometheus
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - lemon_prometheus:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - lemon_net
+
+  grafana:
+    image: grafana/grafana:12.0.2
+    container_name: lemon-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - lemon_grafana:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - lemon_net
+
+  frontend:
+    build:
+      context: ../FrontEnd/lemon-writer
+      dockerfile: Dockerfile
+    container_name: lemon-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - lemon_net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../FrontEnd/lemon-writer
+          ignore:
+            - node_modules/
+            - dist/
+
+  admin-seed:
+    image: postgres:16
+    container_name: lemon-admin-seed
+    restart: "no"
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: lemondb
+      PGUSER: lemon
+      PGPASSWORD: lemon
+    volumes:
+      - ./postgres/001-seed-admin.sql:/seed/001-seed-admin.sql:ro
+      - ./postgres/seed-admin.sh:/seed/seed-admin.sh:ro
+    command: ["sh", "/seed/seed-admin.sh"]
+    depends_on:
+      backend:
+        condition: service_started
     networks:
       - lemon_net
 
 volumes:
   lemon_pgdata:
+  lemon_prometheus:
+  lemon_grafana:
 
 networks:
   lemon_net:

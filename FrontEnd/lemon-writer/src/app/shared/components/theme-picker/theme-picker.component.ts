@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { ThemeService, ThemeName } from '../../../core/services/theme.service';
@@ -15,6 +15,7 @@ interface CustomColor {
   standalone: true,
   imports: [MatButtonToggleModule, MatIconModule, FormsModule],
   templateUrl: './theme-picker.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './theme-picker.component.scss'
 })
 export class ThemePickerComponent {

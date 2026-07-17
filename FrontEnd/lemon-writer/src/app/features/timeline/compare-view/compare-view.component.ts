@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal, inject } from '@angular/core';
+import { Component, Input, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './compare-view.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './compare-view.component.scss'
 })
 export class CompareViewComponent implements OnInit {

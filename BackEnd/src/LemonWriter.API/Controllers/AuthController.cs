@@ -4,6 +4,9 @@ using LemonWriter.Application.Users.Commands;
 using LemonWriter.Application.Users.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using System.Security.Claims;
 
 namespace LemonWriter.API.Controllers;
 
@@ -25,9 +28,14 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var command = new RegisterUserCommand(request.Email, request.Name, request.Password);
+        var command = new RegisterUserCommand(request.Email, request.DisplayName, request.Password);
         var result = await _mediator.Send(command, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : Conflict(new { error = result.Error!.Message });
+        if (result.IsFailure)
+            return Conflict(new { message = result.Error!.Message });
+
+        var user = result.Value!;
+        var token = GenerateJwtToken(user.Id, user.Email, user.Name);
+        return Ok(new { token, user = ToClientUser(user) });
     }
 
     [HttpPost("login")]
@@ -42,15 +50,45 @@ public class AuthController : ControllerBase
             return Unauthorized(new { error = "Invalid credentials." });
 
         var token = GenerateJwtToken(result.Value!.Id, result.Value.Email, result.Value.Name);
-        return Ok(new { token, user = result.Value });
+        return Ok(new { token, user = ToClientUser(result.Value) });
     }
 
-    [HttpGet("oauth/google/callback")]
-    public IActionResult GoogleCallback()
+    [HttpGet("oauth/google")]
+    public IActionResult GoogleLogin()
     {
-        // OAuth callback is handled by the OAuth middleware.
-        // This endpoint is a placeholder for documentation.
-        return Ok(new { message = "OAuth callback endpoint." });
+        var callback = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme)!;
+        return Challenge(new AuthenticationProperties { RedirectUri = callback }, GoogleDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet("oauth/google/complete")]
+    public async Task<IActionResult> GoogleCallback(CancellationToken cancellationToken)
+    {
+        var external = await HttpContext.AuthenticateAsync("External");
+        if (!external.Succeeded || external.Principal is null)
+            return Redirect("/auth/login?error=google");
+
+        var email = external.Principal.FindFirstValue(ClaimTypes.Email);
+        var name = external.Principal.FindFirstValue(ClaimTypes.Name) ?? email;
+        var providerId = external.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(email))
+            return Redirect("/auth/login?error=google-email");
+
+        var found = await _mediator.Send(new GetUserByEmailQuery(email), cancellationToken);
+        var user = found.Value;
+        if (found.IsFailure)
+        {
+            var registered = await _mediator.Send(
+                new RegisterUserCommand(email, name ?? email, null, "Google", providerId), cancellationToken);
+            if (registered.IsFailure)
+                return Redirect("/auth/login?error=google-register");
+            user = registered.Value;
+        }
+
+        await HttpContext.SignOutAsync("External");
+        var token = GenerateJwtToken(user!.Id, user.Email, user.Name);
+        var frontend = _configuration["Frontend:BaseUrl"] ?? "http://localhost:4200";
+        var query = $"token={Uri.EscapeDataString(token)}&id={user.Id}&email={Uri.EscapeDataString(user.Email)}&displayName={Uri.EscapeDataString(user.Name)}";
+        return Redirect($"{frontend}/auth/google-callback?{query}");
     }
 
     private string GenerateJwtToken(Guid userId, string email, string name)
@@ -74,7 +112,16 @@ public class AuthController : ControllerBase
 
         return new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(jwtToken);
     }
+
+    private static object ToClientUser(LemonWriter.Application.Common.DTOs.UserDto user) => new
+    {
+        user.Id,
+        user.Email,
+        DisplayName = user.Name,
+        AvatarUrl = (string?)null,
+        user.CreatedAt
+    };
 }
 
-public record RegisterRequest(string Email, string Name, string Password);
+public record RegisterRequest(string Email, string DisplayName, string Password);
 public record LoginRequest(string Email, string Password);

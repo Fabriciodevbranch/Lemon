@@ -13,6 +13,10 @@ export const routes: Routes = [
       {
         path: 'register',
         loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
+      },
+      {
+        path: 'google-callback',
+        loadComponent: () => import('./features/auth/google-callback/google-callback.component').then(m => m.GoogleCallbackComponent)
       }
     ]
   },
@@ -26,6 +30,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/book-settings/book-settings.component').then(m => m.BookSettingsComponent)
   },
+  ...(['characters', 'relationships', 'places', 'objects', 'timeline', 'goals', 'lore', 'magic', 'research', 'gallery', 'metrics'] as const).map(mode => ({
+    path: `books/:bookId/${mode}`,
+    canActivate: [authGuard],
+    data: { mode },
+    loadComponent: () => import('./features/story-studio/story-studio.component').then(m => m.StoryStudioComponent)
+  })),
   {
     path: 'books/:bookId/chapters/:chapterId/edit',
     canActivate: [authGuard],
