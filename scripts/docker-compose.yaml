@@ -33,6 +33,8 @@ services:
       Jwt__Issuer: LemonWriter
       Jwt__Audience: LemonWriterClient
       Jwt__ExpiryMinutes: 480
+      Security__AllowDevelopmentSecrets: "true"
+      Grpc__Enabled: "false"
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-placeholder-client-id}
       Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-placeholder-client-secret}
       Frontend__BaseUrl: http://localhost:4200

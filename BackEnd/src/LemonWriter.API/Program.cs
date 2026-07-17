@@ -66,6 +66,10 @@ builder.Services.AddSwaggerGen(c =>
 
 // Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "default-secret-key-replace-in-production-32chars";
+var allowDevelopmentSecrets = builder.Configuration.GetValue<bool>("Security:AllowDevelopmentSecrets");
+if (builder.Environment.IsProduction() && !allowDevelopmentSecrets &&
+    (jwtKey.Contains("default-secret", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("local-development", StringComparison.OrdinalIgnoreCase) || jwtKey.Length < 32))
+    throw new InvalidOperationException("A strong Jwt:Key of at least 32 characters is required in production.");
 builder.Services
     .AddAuthentication(options =>
     {
@@ -159,8 +163,11 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapGrpcService<BooksGrpcService>();
-app.MapGrpcService<ChaptersGrpcService>();
+if (builder.Configuration.GetValue<bool>("Grpc:Enabled"))
+{
+    app.MapGrpcService<BooksGrpcService>().RequireAuthorization();
+    app.MapGrpcService<ChaptersGrpcService>().RequireAuthorization();
+}
 app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = _ => false

@@ -30,6 +30,13 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
+        services.AddScoped<ILibraryQueryService, LibraryQueryService>();
+        services.AddScoped<IPrivacyPreferenceService, PrivacyPreferenceService>();
+        services.AddScoped<IStudioEntryService, StudioEntryService>();
+        services.AddScoped<ITimelineService, TimelineService>();
+        services.AddScoped<IRelationshipService, RelationshipService>();
+        services.AddScoped<IStoryMetricsService, StoryMetricsService>();
         services.AddScoped<EpubExportService>();
         services.AddScoped<PdfExportService>();
         services.AddScoped<IExportService, CompositeExportService>();

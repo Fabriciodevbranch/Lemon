@@ -65,14 +65,26 @@ Lemon is a modular monolith with clean architectural boundaries and service-read
 ```mermaid
 flowchart LR
     Browser["Angular 22 web app"] -->|REST / JWT| API["ASP.NET Core 9 API"]
-    API --> Application["Application layer\nCQRS + MediatR"]
+    API --> Application["Application layer\nCQRS + use-case ports"]
     Application --> Domain["Domain layer\nEntities + events"]
-    API --> Infrastructure["Infrastructure layer\nEF Core + repositories + exports"]
+    Infrastructure["Infrastructure adapters\nEF Core + repositories + exports"] -. implements .-> Application
     Infrastructure --> PostgreSQL[(PostgreSQL 16)]
     API -->|OTLP| OTel["OpenTelemetry Collector"]
     OTel --> Prometheus["Prometheus"]
     Prometheus --> Grafana["Grafana dashboards"]
 ```
+
+Browser-facing controllers depend only on Application contracts. Database queries, privacy persistence,
+Story Studio operations, exports, and resource authorization are implemented by Infrastructure adapters
+and wired exclusively in the API composition root. This keeps EF Core out of transport code and allows
+each capability to move behind a separate process boundary later without rewriting its HTTP contract.
+
+Story Studio is divided into independently registered capability slices:
+
+- Entries and worldbuilding: characters, places, objects, lore, magic, research, gallery, and goals
+- Timeline: chronological ordering and reorder validation
+- Relationships: character graph edges and cross-book integrity checks
+- Story metrics: privacy-aware structural analysis calculated only after user opt-in
 
 ### Repository layout
 
