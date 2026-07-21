@@ -1,1 +1,7 @@
 <router-outlet></router-outlet>
+@if (loading.visible()) {
+  <div class="global-loading" role="status" aria-live="polite" aria-label="Loading content">
+    <div class="lemon-loader" aria-hidden="true"><span></span><span></span><span></span></div>
+    <p>Gathering your story…</p>
+  </div>
+}

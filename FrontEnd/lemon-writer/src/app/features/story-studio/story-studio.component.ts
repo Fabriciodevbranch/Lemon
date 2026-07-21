@@ -29,7 +29,7 @@ interface StudioItem {
 }
 
 interface MediaDraft { fileName: string; name: string; summary: string; details: string; image: string; }
-interface MediaCollectionView { id: string; name: string; items: StudioItem[]; cover?: string; }
+interface MediaCollectionView { id: string; name: string; items: StudioItem[]; cover?: string; description?: string; }
 interface AdaptivePalette { surface: string; action: string; accent: string; actionText: string; }
 interface ColorCluster { red: number; green: number; blue: number; count: number; }
 
@@ -100,8 +100,9 @@ export class StoryStudioComponent {
     const groups = new Map<string, MediaCollectionView>();
     for (const item of this.items().filter(item => item.collectionId)) {
       const id = item.collectionId!;
-      const group = groups.get(id) ?? { id, name: item.collectionName ?? 'Untitled collection', items: [], cover: item.image };
+      const group = groups.get(id) ?? { id, name: item.collectionName ?? 'Untitled collection', items: [], cover: item.image, description: item.summary || undefined };
       group.items.push(item);
+      if (!group.description && item.summary) group.description = item.summary;
       groups.set(id, group);
     }
     return [...groups.values()];

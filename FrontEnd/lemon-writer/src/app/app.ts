@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
+import { LoadingService } from './core/services/loading.service';
 
 @Component({
   selector: 'app-root',
@@ -11,6 +12,7 @@ import { ThemeService } from './core/services/theme.service';
 })
 export class App implements OnInit {
   private themeService = inject(ThemeService);
+  readonly loading = inject(LoadingService);
 
   ngOnInit(): void {
     const theme = this.themeService.currentTheme();

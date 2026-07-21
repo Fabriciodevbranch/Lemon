@@ -1,0 +1,92 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
+import { StoryStudioService, StudioMetrics } from '../../core/services/story-studio.service';
+import { StoryStudioComponent } from './story-studio.component';
+
+describe('StoryStudioComponent gallery', () => {
+  let fixture: ComponentFixture<StoryStudioComponent>;
+  let component: StoryStudioComponent;
+  let studio: jasmine.SpyObj<StoryStudioService>;
+
+  const metrics: StudioMetrics = {
+    enabled: false, characters: 0, places: 0, objects: 0, gallery: 0, relationships: 0,
+    completeness: 0, storyCompleteness: 0, characterCoverage: 0, relationshipCoverage: 0,
+    timelineCompleteness: 0, orphanCharacters: 0, emptyLocations: 0, unusedObjects: 0
+  };
+  const collectionItems = [
+    { id: 'c1-a', name: 'Forest', summary: 'Misty woodland', details: '', image: 'forest.jpg', collectionId: 'c1', collectionName: 'Woodlands' },
+    { id: 'c1-b', name: 'Moss', summary: '', details: '', image: 'moss.jpg', collectionId: 'c1', collectionName: 'Woodlands' }
+  ];
+  const standalone = { id: 'm1', name: 'Loose sketch', summary: 'A quick reference', details: '', image: 'sketch.jpg' };
+
+  beforeEach(async () => {
+    studio = jasmine.createSpyObj<StoryStudioService>('StoryStudioService', ['metrics', 'list', 'delete']);
+    studio.metrics.and.returnValue(of(metrics));
+    studio.list.and.returnValue(of([]));
+    studio.delete.and.returnValue(of(void 0));
+
+    await TestBed.configureTestingModule({
+      imports: [StoryStudioComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'book-1' }, data: { mode: 'gallery' } } } },
+        { provide: StoryStudioService, useValue: studio },
+        { provide: AuthService, useValue: { currentUser$: of(null), logout: jasmine.createSpy('logout') } }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StoryStudioComponent);
+    component = fixture.componentInstance;
+    component.loading.set(false);
+  });
+
+  function setItems(items: object[]): void {
+    (component.items as unknown as { set(value: object[]): void }).set(items);
+    fixture.detectChanges();
+  }
+
+  it('renders collections before unsorted media using distinct card markup', () => {
+    setItems([...collectionItems, standalone]);
+    const root = fixture.nativeElement as HTMLElement;
+    const collections = root.querySelector('.collections-section')!;
+    const unsorted = root.querySelector('.unsorted-section')!;
+
+    expect(collections.compareDocumentPosition(unsorted) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(root.querySelectorAll('.collection-card').length).toBe(1);
+    expect(root.querySelectorAll('.collection-preview img').length).toBe(2);
+    expect(root.querySelectorAll('.unsorted-media-card').length).toBe(1);
+    expect(root.querySelector('.unsorted-media-card .eyebrow')).toBeNull();
+  });
+
+  it('keeps both section empty states visible', () => {
+    setItems([]);
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('No collections yet');
+    expect(text).toContain('Everything is neatly organized.');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.gallery-empty--collections button')).not.toBeNull();
+  });
+
+  it('opens the existing collection modal when a collection card is clicked', () => {
+    setItems(collectionItems);
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.collection-card')!.click();
+    fixture.detectChanges();
+    expect(component.selectedCollectionId()).toBe('c1');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.collection-modal')).not.toBeNull();
+  });
+
+  it('preserves standalone media deletion behavior', () => {
+    setItems([standalone]);
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.unsorted-media-card .delete')!.click();
+    expect(studio.delete).toHaveBeenCalledWith('book-1', 'm1');
+    expect(component.items().length).toBe(0);
+  });
+
+  it('uses dedicated responsive layout containers', () => {
+    setItems([...collectionItems, standalone]);
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.collections-grid')).not.toBeNull();
+    expect(root.querySelector('.unsorted-media-grid')).not.toBeNull();
+  });
+});
