@@ -35,6 +35,25 @@ public sealed class StoryStudioController(
             : BadRequest(new { message = result.Error!.Message });
     }
 
+    [HttpPost("gallery/batch")]
+    [RequestSizeLimit(72 * 1024 * 1024)]
+    public async Task<IActionResult> CreateGalleryBatch(Guid bookId, CreateGalleryBatch request, CancellationToken ct)
+    {
+        if (!await OwnsBook(bookId, ct)) return NotFound();
+        var result = await entries.CreateGalleryBatchAsync(bookId,
+            new(request.CollectionName, request.Items.Select(x => x.ToDto()).ToList()), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { message = result.Error!.Message });
+    }
+
+    [HttpPut("entries/{id:guid}/metadata")]
+    public async Task<IActionResult> UpdateMetadata(Guid bookId, Guid id, UpdateStudioEntryMetadata request, CancellationToken ct)
+    {
+        if (!await OwnsBook(bookId, ct)) return NotFound();
+        var result = await entries.UpdateMetadataAsync(bookId, id, new(request.Name, request.Summary, request.Details), ct);
+        return result.IsSuccess ? Ok(result.Value) : result.Error == LemonWriter.Application.Common.Errors.Error.NotFound
+            ? NotFound() : BadRequest(new { message = result.Error!.Message });
+    }
+
     [HttpPatch("goals/{id:guid}/progress")]
     public async Task<IActionResult> UpdateGoalProgress(Guid bookId, Guid id, GoalProgressRequest request, CancellationToken ct)
     {
@@ -101,5 +120,7 @@ public record CreateStudioEntry(string Name, string? Summary, string? Details, s
         CharacterIds, ObjectIds, PlaceIds, GoalTarget, GoalProgress);
 }
 public record GoalProgressRequest(int Progress);
+public record CreateGalleryBatch(string? CollectionName, IReadOnlyList<CreateStudioEntry> Items);
+public record UpdateStudioEntryMetadata(string Name, string? Summary, string? Details);
 public record CreateRelationship(Guid From, Guid To, string? Label, string? Tone);
 public record ReorderTimelineRequest(IReadOnlyList<Guid> Ids);

@@ -125,3 +125,13 @@ public class StoryRelationshipConfiguration : IEntityTypeConfiguration<StoryRela
         builder.HasIndex(x => x.BookId);
     }
 }
+
+public class StoryMediaCollectionConfiguration : IEntityTypeConfiguration<StoryMediaCollection>
+{
+    public void Configure(EntityTypeBuilder<StoryMediaCollection> builder)
+    {
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
+        builder.HasIndex(x => new { x.BookId, x.Name });
+    }
+}

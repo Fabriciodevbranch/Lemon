@@ -22,25 +22,47 @@ public sealed class StoryStudioEntry : Entity<Guid>
     public string? RelatedPlaceIds { get; private set; }
     public int? GoalTarget { get; private set; }
     public int GoalProgress { get; private set; }
+    public Guid? CollectionId { get; private set; }
 
     private StoryStudioEntry() { }
 
     public static StoryStudioEntry Create(Guid bookId, string type, string name, string? summary,
         string? details, string? motivation, string? plot, string? imageData,
         string? eventDate = null, string? impact = null, string? characterIds = null, string? objectIds = null, string? placeIds = null,
-        int? goalTarget = null, int goalProgress = 0) => new()
+        int? goalTarget = null, int goalProgress = 0, Guid? collectionId = null) => new()
     {
         Id = Guid.NewGuid(), BookId = bookId, Type = type, Name = name.Trim(),
         Summary = summary?.Trim() ?? string.Empty, Details = details?.Trim() ?? string.Empty,
         Motivation = motivation?.Trim(), Plot = plot?.Trim(), ImageData = imageData,
         EventDate = eventDate?.Trim(), Impact = impact?.Trim(), RelatedCharacterIds = characterIds,
         RelatedObjectIds = objectIds, RelatedPlaceIds = placeIds,
-        GoalTarget = goalTarget is > 0 ? goalTarget : null, GoalProgress = Math.Max(0, goalProgress),
+        GoalTarget = goalTarget is > 0 ? goalTarget : null, GoalProgress = Math.Max(0, goalProgress), CollectionId = collectionId,
         CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
     };
 
     public void SetSortOrder(int order) => SortOrder = Math.Max(0, order);
     public void SetGoalProgress(int progress) => GoalProgress = Math.Clamp(progress, 0, GoalTarget ?? int.MaxValue);
+    public void UpdateMetadata(string name, string? summary, string? details)
+    {
+        Name = name.Trim();
+        Summary = summary?.Trim() ?? string.Empty;
+        Details = details?.Trim() ?? string.Empty;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+public sealed class StoryMediaCollection : Entity<Guid>
+{
+    public Guid BookId { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public DateTime CreatedAt { get; private set; }
+
+    private StoryMediaCollection() { }
+
+    public static StoryMediaCollection Create(Guid bookId, string name) => new()
+    {
+        Id = Guid.NewGuid(), BookId = bookId, Name = name.Trim(), CreatedAt = DateTime.UtcNow
+    };
 }
 
 public sealed class StoryRelationship : Entity<Guid>

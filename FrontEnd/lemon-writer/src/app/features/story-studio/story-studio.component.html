@@ -93,6 +93,27 @@
         </div>
         <p class="timeline-help"><mat-icon>drag_indicator</mat-icon>Drag any event to rearrange the chronology. Changes are saved automatically.</p>
       }
+    } @else if (mode === 'gallery') {
+      @if (items().length === 0) {
+        <div class="empty-studio"><mat-icon>collections</mat-icon><h2>Your gallery & media will live here</h2><p>Capture visual references and organize related images into collections.</p><button (click)="openCreate()">Add your first media item</button></div>
+      } @else {
+        <div class="item-grid gallery-grid">
+          @for (collection of mediaCollections(); track collection.id) {
+            <button type="button" class="studio-card gallery-card collection-card" (click)="openCollection(collection.id)">
+              @if (collection.cover) { <img [src]="collection.cover" [alt]="collection.name"> } @else { <div class="card-mark"><mat-icon>collections</mat-icon></div> }
+              <div class="collection-stack" aria-hidden="true"></div>
+              <div class="card-body"><p class="eyebrow">Collection · {{ collection.items.length }} items</p><h2>{{ collection.name }}</h2><p>Open this collection to browse its media.</p></div>
+            </button>
+          }
+          @for (item of ungroupedMedia(); track item.id) {
+            <article class="studio-card gallery-card" role="button" tabindex="0" (click)="openMedia(item)" (keydown.enter)="openMedia(item)">
+              @if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>image</mat-icon></div> }
+              <div class="card-body"><p class="eyebrow">Media item</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p></div>
+              <button class="delete" (click)="$event.stopPropagation(); remove(item.id)" aria-label="Delete"><mat-icon>delete</mat-icon></button>
+            </article>
+          }
+        </div>
+      }
     } @else {
       @if (items().length === 0) {
         <div class="empty-studio"><mat-icon>{{ meta.icon }}</mat-icon><h2>Your {{ meta.title.toLowerCase() }} will live here</h2><p>Capture an idea now. You can keep shaping it as the story develops.</p><button (click)="openCreate()">Add your first {{ meta.singular }}</button></div>
@@ -101,7 +122,7 @@
           @for (item of items(); track item.id) {
             <article class="studio-card">
               @if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }
-              <div class="card-body"><p class="eyebrow">{{ meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>
+              <div class="card-body"><p class="eyebrow">{{ item.collectionName || meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>
                 @if (item.motivation) { <dl><dt>Motivation</dt><dd>{{ item.motivation }}</dd></dl> }
                 @if (item.plot) { <dl><dt>Plot role</dt><dd>{{ item.plot }}</dd></dl> }
               </div>
@@ -125,7 +146,30 @@
         <label>Tone<select [(ngModel)]="relationshipDraft.tone"><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Tense</option></select></label>
         <button class="save-button" (click)="saveRelationship()">Save relationship</button>
       } @else {
-        @if (mode === 'gallery') { <label class="upload">Image<input type="file" accept="image/*" (change)="onMediaSelected($event)"></label> }
+        @if (mode === 'gallery') {
+          <label class="upload">Images<input type="file" accept="image/*" multiple (change)="onMediaSelected($event)"><small>Select up to 20 images, 5 MB each and 50 MB total.</small></label>
+          @if (mediaError()) { <p class="media-error" role="alert">{{ mediaError() }}</p> }
+          @if (mediaLoading()) { <p class="upload-status">Preparing previews…</p> }
+          @if (mediaDrafts().length > 1) {
+            <div class="media-count"><strong>{{ mediaDrafts().length }} images selected</strong><span>Review their information before saving.</span></div>
+            <label class="collection-toggle"><input type="checkbox" [(ngModel)]="createCollection"> Group these images into a collection</label>
+            @if (createCollection) { <label>Collection name<input [(ngModel)]="collectionName" maxlength="200" placeholder="Castle references"></label> }
+            <div class="metadata-switch" role="group" aria-label="Metadata mode">
+              <button type="button" [class.active]="metadataMode === 'shared'" (click)="metadataMode = 'shared'">Shared details</button>
+              <button type="button" [class.active]="metadataMode === 'individual'" (click)="metadataMode = 'individual'">Edit individually</button>
+            </div>
+            @if (metadataMode === 'shared') {
+              <label>Short summary<input [(ngModel)]="sharedSummary" placeholder="Applied to every selected image"></label>
+              <label>Details<textarea [(ngModel)]="sharedDetails" rows="4" placeholder="Shared context for these references"></textarea></label>
+            } @else {
+              <div class="media-editor"><div class="media-tabs">
+                @for (media of mediaDrafts(); track media.fileName; let i = $index) { <button type="button" [class.active]="activeMediaIndex() === i" (click)="selectMedia(i)"><img [src]="media.image" alt=""><span>{{ media.name }}</span></button> }
+              </div>
+              @if (mediaDrafts()[activeMediaIndex()]; as media) { <div class="media-fields"><img [src]="media.image" [alt]="media.name"><label>Name<input [ngModel]="media.name" (ngModelChange)="updateActiveMedia('name', $event)"></label><label>Short summary<input [ngModel]="media.summary" (ngModelChange)="updateActiveMedia('summary', $event)"></label><label>Details<textarea [ngModel]="media.details" (ngModelChange)="updateActiveMedia('details', $event)" rows="3"></textarea></label></div> }
+              </div>
+            }
+          }
+        }
         <label>{{ mode === 'timeline' ? 'Event title' : 'Name' }}<input [(ngModel)]="draft.name" [placeholder]="mode === 'timeline' ? 'The coronation, first contact…' : 'Name this ' + meta.singular"></label>
         @if (mode === 'timeline') {
           <label>Specific date or period (optional)<input [(ngModel)]="draft.eventDate" placeholder="14 March 1928, Third Age, Day 7…"></label>
@@ -139,13 +183,44 @@
           <label>Current word count<input type="number" min="0" [(ngModel)]="draft.goalProgress" placeholder="0"></label>
           <label>Deadline (optional)<input type="date" [(ngModel)]="draft.eventDate"></label>
           <label>Notes<textarea [(ngModel)]="draft.details" rows="3" placeholder="Why this goal matters, your plan, or a reward…"></textarea></label>
-        } @else {
+        } @else if (mode !== 'gallery' || mediaDrafts().length <= 1) {
           <label>Short summary<input [(ngModel)]="draft.summary" placeholder="A quick reference"></label>
           <label>Details<textarea [(ngModel)]="draft.details" rows="4" placeholder="Characteristics, attributes, history, atmosphere…"></textarea></label>
         }
         @if (mode === 'characters') { <label>Motivation<textarea [(ngModel)]="draft.motivation" rows="2"></textarea></label><label>Plot involvement<textarea [(ngModel)]="draft.plot" rows="2"></textarea></label> }
-        <button class="save-button" (click)="saveItem()">Save {{ meta.singular }}</button>
+        <button class="save-button" (click)="saveItem()" [disabled]="mediaSaving()">{{ mediaSaving() ? 'Saving…' : mode === 'gallery' && mediaDrafts().length > 1 ? 'Save ' + mediaDrafts().length + ' media items' : 'Save ' + meta.singular }}</button>
       }
+    </section>
+  </div>
+}
+
+@if (selectedCollection(); as collection) {
+  <div class="modal-backdrop" (click)="closeCollection()">
+    <section class="studio-modal collection-modal" role="dialog" aria-modal="true" [attr.aria-label]="collection.name" (click)="$event.stopPropagation()">
+      <header><div><p class="eyebrow">Media collection</p><h2>{{ collection.name }}</h2><p>{{ collection.items.length }} media items</p></div><button class="icon-button" (click)="closeCollection()"><mat-icon>close</mat-icon></button></header>
+      <div class="collection-media-grid">
+        @for (item of collection.items; track item.id) {
+          <article class="collection-media" role="button" tabindex="0" (click)="openMedia(item)" (keydown.enter)="openMedia(item)">
+            @if (item.image) { <img [src]="item.image" [alt]="item.name"> }
+            <div><strong>{{ item.name }}</strong><p>{{ item.summary || item.details || 'No description yet.' }}</p></div>
+            <button class="delete" (click)="$event.stopPropagation(); remove(item.id)" aria-label="Delete media"><mat-icon>delete</mat-icon></button>
+          </article>
+        }
+      </div>
+    </section>
+  </div>
+}
+
+@if (selectedMedia(); as media) {
+  <div class="modal-backdrop media-detail-backdrop" (click)="closeMedia()">
+    <section class="studio-modal media-detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="media.name" (click)="$event.stopPropagation()">
+      <header><div><p class="eyebrow">{{ media.collectionName || 'Media item' }}</p><h2>Edit media details</h2></div><button class="icon-button" (click)="closeMedia()"><mat-icon>close</mat-icon></button></header>
+      @if (media.image) { <img class="media-detail-image" [src]="media.image" [alt]="media.name"> }
+      <label>Name<input [(ngModel)]="mediaEdit.name" maxlength="300"></label>
+      <label>Short summary<input [(ngModel)]="mediaEdit.summary" maxlength="1000"></label>
+      <label>Details<textarea [(ngModel)]="mediaEdit.details" rows="5"></textarea></label>
+      @if (mediaEditError()) { <p class="media-error" role="alert">{{ mediaEditError() }}</p> }
+      <button class="save-button" [disabled]="mediaEditSaving()" (click)="saveMediaMetadata()">{{ mediaEditSaving() ? 'Saving…' : 'Save changes' }}</button>
     </section>
   </div>
 }

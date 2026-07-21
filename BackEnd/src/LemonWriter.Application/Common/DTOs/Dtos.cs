@@ -64,11 +64,14 @@ public record LibraryBookStatsDto(int ChapterCount, int WordCount)
 public record StudioEntryDto(Guid Id, Guid BookId, string Type, string Name, string Summary, string Details,
     string? Motivation, string? Plot, string? ImageData, DateTime CreatedAt, DateTime UpdatedAt, int SortOrder,
     string? EventDate, string? Impact, string? RelatedCharacterIds, string? RelatedObjectIds, string? RelatedPlaceIds,
-    int? GoalTarget, int GoalProgress);
+    int? GoalTarget, int GoalProgress, Guid? CollectionId = null, string? CollectionName = null);
 
 public record CreateStudioEntryDto(string Name, string? Summary, string? Details, string? Motivation, string? Plot,
     string? Image, string? EventDate, string? Impact, string? CharacterIds, string? ObjectIds, string? PlaceIds,
     int? GoalTarget, int? GoalProgress);
+
+public record CreateGalleryBatchDto(string? CollectionName, IReadOnlyList<CreateStudioEntryDto> Items);
+public record UpdateStudioEntryMetadataDto(string Name, string? Summary, string? Details);
 
 public record StoryRelationshipDto(Guid Id, Guid From, Guid To, string Label, string Tone);
 public record CreateStoryRelationshipDto(Guid From, Guid To, string? Label, string? Tone);

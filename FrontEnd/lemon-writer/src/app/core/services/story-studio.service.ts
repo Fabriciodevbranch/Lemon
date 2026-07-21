@@ -9,6 +9,7 @@ export interface StudioItemDto {
   eventDate?: string; impact?: string; relatedCharacterIds?: string; relatedObjectIds?: string; relatedPlaceIds?: string;
   characterIds?: string; objectIds?: string; placeIds?: string;
   goalTarget?: number; goalProgress?: number;
+  collectionId?: string; collectionName?: string;
 }
 export interface RelationshipDto { id: string; from: string; to: string; label: string; tone: 'positive' | 'neutral' | 'negative'; }
 export interface StudioMetrics {
@@ -23,6 +24,12 @@ export class StoryStudioService {
   private base(bookId: string): string { return `${environment.apiUrl}/books/${bookId}/studio`; }
   list(bookId: string, type: string): Observable<StudioItemDto[]> { return this.http.get<StudioItemDto[]>(`${this.base(bookId)}/${type}`); }
   create(bookId: string, type: string, value: Partial<StudioItemDto>): Observable<StudioItemDto> { return this.http.post<StudioItemDto>(`${this.base(bookId)}/${type}`, value); }
+  createGalleryBatch(bookId: string, value: { collectionName?: string; items: Partial<StudioItemDto>[] }): Observable<StudioItemDto[]> {
+    return this.http.post<StudioItemDto[]>(`${this.base(bookId)}/gallery/batch`, value);
+  }
+  updateMetadata(bookId: string, id: string, value: { name: string; summary: string; details: string }): Observable<StudioItemDto> {
+    return this.http.put<StudioItemDto>(`${this.base(bookId)}/entries/${id}/metadata`, value);
+  }
   delete(bookId: string, id: string): Observable<void> { return this.http.delete<void>(`${this.base(bookId)}/entries/${id}`); }
   relationships(bookId: string): Observable<RelationshipDto[]> { return this.http.get<RelationshipDto[]>(`${this.base(bookId)}/relationships`); }
   createRelationship(bookId: string, value: Partial<RelationshipDto>): Observable<RelationshipDto> { return this.http.post<RelationshipDto>(`${this.base(bookId)}/relationships`, value); }

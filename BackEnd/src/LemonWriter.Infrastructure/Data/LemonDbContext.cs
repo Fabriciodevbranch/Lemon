@@ -16,6 +16,7 @@ public class LemonDbContext : DbContext, IUnitOfWork
     public DbSet<User> Users => Set<User>();
     public DbSet<StoryStudioEntry> StoryStudioEntries => Set<StoryStudioEntry>();
     public DbSet<StoryRelationship> StoryRelationships => Set<StoryRelationship>();
+    public DbSet<StoryMediaCollection> StoryMediaCollections => Set<StoryMediaCollection>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -24,7 +24,12 @@ interface StudioItem {
   placeIds?: string[];
   goalTarget?: number;
   goalProgress?: number;
+  collectionId?: string;
+  collectionName?: string;
 }
+
+interface MediaDraft { fileName: string; name: string; summary: string; details: string; image: string; }
+interface MediaCollectionView { id: string; name: string; items: StudioItem[]; cover?: string; }
 
 interface Relationship {
   id: string;
@@ -53,7 +58,7 @@ const MODE_META: Record<StudioMode, { title: string; eyebrow: string; descriptio
   standalone: true,
   imports: [FormsModule, DecimalPipe, RouterLink, RouterLinkActive, MatIconModule, DragDropModule, NavbarComponent],
   templateUrl: './story-studio.component.html',
-  styleUrl: './story-studio.component.scss',
+  styleUrls: ['./story-studio.component.scss', './story-studio-media.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class StoryStudioComponent {
@@ -74,13 +79,40 @@ export class StoryStudioComponent {
   readonly dialogOpen = signal(false);
   readonly metricsError = signal('');
   readonly metricsSaving = signal(false);
+  readonly mediaDrafts = signal<MediaDraft[]>([]);
+  readonly activeMediaIndex = signal(0);
+  readonly mediaLoading = signal(false);
+  readonly mediaError = signal('');
+  readonly mediaSaving = signal(false);
+  readonly selectedCollectionId = signal<string | null>(null);
+  readonly selectedMedia = signal<StudioItem | null>(null);
+  readonly mediaEditSaving = signal(false);
+  readonly mediaEditError = signal('');
   readonly characterCount = computed(() => this.metrics().characters);
   readonly placeCount = computed(() => this.metrics().places);
   readonly objectCount = computed(() => this.metrics().objects);
   readonly galleryCount = computed(() => this.metrics().gallery);
   readonly completeness = computed(() => this.metrics().completeness);
+  readonly mediaCollections = computed<MediaCollectionView[]>(() => {
+    const groups = new Map<string, MediaCollectionView>();
+    for (const item of this.items().filter(item => item.collectionId)) {
+      const id = item.collectionId!;
+      const group = groups.get(id) ?? { id, name: item.collectionName ?? 'Untitled collection', items: [], cover: item.image };
+      group.items.push(item);
+      groups.set(id, group);
+    }
+    return [...groups.values()];
+  });
+  readonly ungroupedMedia = computed(() => this.items().filter(item => !item.collectionId));
+  readonly selectedCollection = computed(() => this.mediaCollections().find(x => x.id === this.selectedCollectionId()) ?? null);
 
   draft: Partial<StudioItem> = {};
+  metadataMode: 'shared' | 'individual' = 'shared';
+  createCollection = true;
+  collectionName = '';
+  sharedSummary = '';
+  sharedDetails = '';
+  mediaEdit = { name: '', summary: '', details: '' };
   relationshipDraft: Partial<Relationship> = { tone: 'neutral' };
 
   constructor() { this.load(); }
@@ -118,6 +150,15 @@ export class StoryStudioComponent {
 
   openCreate(): void {
     this.draft = {};
+    this.mediaDrafts.set([]);
+    this.activeMediaIndex.set(0);
+    this.metadataMode = 'shared';
+    this.createCollection = true;
+    this.collectionName = '';
+    this.sharedSummary = '';
+    this.sharedDetails = '';
+    this.mediaError.set('');
+    this.mediaSaving.set(false);
     this.relationshipDraft = { tone: 'neutral' };
     this.dialogOpen.set(true);
   }
@@ -125,6 +166,7 @@ export class StoryStudioComponent {
   closeCreate(): void { this.dialogOpen.set(false); }
 
   saveItem(): void {
+    if (this.mode === 'gallery' && this.mediaDrafts().length > 1) { this.saveMediaBatch(); return; }
     if (!this.draft.name?.trim()) return;
     const item: StudioItem = {
       id: '',
@@ -177,14 +219,96 @@ export class StoryStudioComponent {
   }
 
   onMediaSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file || file.size > 5 * 1024 * 1024) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.draft.image = String(reader.result);
-      if (!this.draft.name) this.draft.name = file.name;
-    };
-    reader.readAsDataURL(file);
+    this.mediaError.set('');
+    const selected = Array.from((event.target as HTMLInputElement).files ?? []);
+    const files = selected.filter(file => file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024).slice(0, 20);
+    if (files.length !== selected.length) {
+      this.mediaError.set('Use up to 20 image files of 5 MB or less each.');
+      return;
+    }
+    if (files.reduce((total, file) => total + file.size, 0) > 50 * 1024 * 1024) {
+      this.mediaError.set('The selected images must be 50 MB or less in total.');
+      return;
+    }
+    if (!files.length) return;
+    this.mediaLoading.set(true);
+    Promise.all(files.map(file => this.readMedia(file))).then(drafts => {
+      this.mediaDrafts.set(drafts);
+      this.activeMediaIndex.set(0);
+      if (drafts.length === 1) { this.draft.image = drafts[0].image; this.draft.name = drafts[0].name; }
+      else this.collectionName = `${drafts[0].name} collection`;
+      this.mediaLoading.set(false);
+    });
+  }
+
+  selectMedia(index: number): void { this.activeMediaIndex.set(index); }
+  updateActiveMedia(field: 'name' | 'summary' | 'details', value: string): void {
+    const index = this.activeMediaIndex();
+    this.mediaDrafts.update(items => items.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  }
+  private saveMediaBatch(): void {
+    const drafts = this.mediaDrafts();
+    if (drafts.some(item => !item.name.trim())) return;
+    const items = drafts.map(item => ({ name: item.name.trim(), image: item.image,
+      summary: (this.metadataMode === 'shared' ? this.sharedSummary : item.summary).trim(),
+      details: (this.metadataMode === 'shared' ? this.sharedDetails : item.details).trim() }));
+    this.mediaError.set('');
+    this.mediaSaving.set(true);
+    this.studio.createGalleryBatch(this.bookId, {
+      collectionName: this.createCollection ? this.collectionName.trim() || undefined : undefined, items
+    }).subscribe({
+      next: saved => {
+        this.items.update(current => [...saved.map(x => this.toStudioItem(x)), ...current]);
+        this.studio.metrics(this.bookId).subscribe(value => this.metrics.set(value));
+        this.closeCreate();
+      },
+      error: error => {
+        this.mediaSaving.set(false);
+        this.mediaError.set(error?.error?.message ?? (error?.status === 413
+          ? 'The selected images are too large to upload together.'
+          : 'The media items could not be saved. Please try again.'));
+      }
+    });
+  }
+  private readMedia(file: File): Promise<MediaDraft> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ fileName: file.name, name: this.cleanFileName(file.name), summary: '', details: '', image: String(reader.result) });
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+  private cleanFileName(name: string): string {
+    return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  openCollection(id: string): void { this.selectedCollectionId.set(id); }
+  closeCollection(): void { this.selectedCollectionId.set(null); }
+  openMedia(item: StudioItem): void {
+    this.selectedMedia.set(item);
+    this.mediaEdit = { name: item.name, summary: item.summary, details: item.details };
+    this.mediaEditError.set('');
+  }
+  closeMedia(): void { this.selectedMedia.set(null); this.mediaEditSaving.set(false); }
+  saveMediaMetadata(): void {
+    const item = this.selectedMedia();
+    if (!item || !this.mediaEdit.name.trim()) { this.mediaEditError.set('Name is required.'); return; }
+    this.mediaEditSaving.set(true);
+    this.mediaEditError.set('');
+    this.studio.updateMetadata(this.bookId, item.id, {
+      name: this.mediaEdit.name.trim(), summary: this.mediaEdit.summary.trim(), details: this.mediaEdit.details.trim()
+    }).subscribe({
+      next: saved => {
+        const value = this.toStudioItem(saved);
+        this.items.update(items => items.map(current => current.id === value.id ? value : current));
+        this.selectedMedia.set(value);
+        this.mediaEditSaving.set(false);
+      },
+      error: error => {
+        this.mediaEditSaving.set(false);
+        this.mediaEditError.set(error?.error?.message ?? 'The media details could not be saved.');
+      }
+    });
   }
 
   characterName(id: string): string {
@@ -209,6 +333,7 @@ export class StoryStudioComponent {
       motivation: value.motivation, plot: value.plot, image: value.imageData,
       eventDate: value.eventDate, impact: value.impact,
       goalTarget: value.goalTarget, goalProgress: value.goalProgress,
+      collectionId: value.collectionId, collectionName: value.collectionName,
       characterIds: this.ids(value.relatedCharacterIds), objectIds: this.ids(value.relatedObjectIds), placeIds: this.ids(value.relatedPlaceIds)
     };
   }
