@@ -30,6 +30,8 @@ interface StudioItem {
 
 interface MediaDraft { fileName: string; name: string; summary: string; details: string; image: string; }
 interface MediaCollectionView { id: string; name: string; items: StudioItem[]; cover?: string; }
+interface AdaptivePalette { surface: string; action: string; accent: string; actionText: string; }
+interface ColorCluster { red: number; green: number; blue: number; count: number; }
 
 interface Relationship {
   id: string;
@@ -88,7 +90,7 @@ export class StoryStudioComponent {
   readonly selectedMedia = signal<StudioItem | null>(null);
   readonly mediaEditSaving = signal(false);
   readonly mediaEditError = signal('');
-  readonly collectionColors = signal<Record<string, string>>({});
+  readonly adaptivePalettes = signal<Record<string, AdaptivePalette>>({});
   readonly characterCount = computed(() => this.metrics().characters);
   readonly placeCount = computed(() => this.metrics().places);
   readonly objectCount = computed(() => this.metrics().objects);
@@ -285,12 +287,12 @@ export class StoryStudioComponent {
 
   openCollection(id: string): void { this.selectedCollectionId.set(id); }
   closeCollection(): void { this.selectedCollectionId.set(null); }
-  collectionColor(id: string): string { return this.collectionColors()[id] ?? 'var(--primary-color)'; }
-  mediaColor(item: StudioItem): string {
-    return this.collectionColors()[`media-${item.id}`] ?? 'var(--primary-color)';
+  palette(id: string): AdaptivePalette {
+    return this.adaptivePalettes()[id] ?? { surface: 'var(--primary-color)', action: 'var(--primary-color)', accent: 'var(--primary-color)', actionText: '#fff' };
   }
+  mediaPalette(item: StudioItem): AdaptivePalette { return this.palette(`media-${item.id}`); }
   captureCollectionColor(id: string, event: Event): void {
-    if (this.collectionColors()[id]) return;
+    if (this.adaptivePalettes()[id]) return;
     const image = event.currentTarget as HTMLImageElement;
     const canvas = document.createElement('canvas');
     canvas.width = 32; canvas.height = 32;
@@ -299,20 +301,50 @@ export class StoryStudioComponent {
     try {
       context.drawImage(image, 0, 0, 32, 32);
       const pixels = context.getImageData(0, 0, 32, 32).data;
-      let red = 0, green = 0, blue = 0, weight = 0;
+      const samples: number[][] = [];
       for (let i = 0; i < pixels.length; i += 4) {
         if (pixels[i + 3] < 128) continue;
         const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
         if (brightness < 18 || brightness > 242) continue;
-        const saturationWeight = Math.max(pixels[i], pixels[i + 1], pixels[i + 2]) - Math.min(pixels[i], pixels[i + 1], pixels[i + 2]) + 24;
-        red += pixels[i] * saturationWeight; green += pixels[i + 1] * saturationWeight; blue += pixels[i + 2] * saturationWeight; weight += saturationWeight;
+        samples.push([pixels[i], pixels[i + 1], pixels[i + 2]]);
       }
-      if (!weight) return;
-      const color = this.normalizedAccent(red / weight, green / weight, blue / weight);
-      this.collectionColors.update(colors => ({ ...colors, [id]: color }));
+      if (!samples.length) return;
+      const palette = this.buildPalette(this.clusterColors(samples, 5));
+      this.adaptivePalettes.update(palettes => ({ ...palettes, [id]: palette }));
     } catch { /* Fall back to the theme color if canvas sampling is unavailable. */ }
   }
-  private normalizedAccent(red: number, green: number, blue: number): string {
+  private clusterColors(samples: number[][], count: number): ColorCluster[] {
+    const centers = Array.from({ length: Math.min(count, samples.length) }, (_, index) => [...samples[Math.floor(index * samples.length / count)]]);
+    let assignments = new Array<number>(samples.length).fill(0);
+    for (let pass = 0; pass < 7; pass++) {
+      assignments = samples.map(sample => centers.reduce((best, center, index) =>
+        this.colorDistance(sample, center) < this.colorDistance(sample, centers[best]) ? index : best, 0));
+      centers.forEach((center, index) => {
+        const members = samples.filter((_, sampleIndex) => assignments[sampleIndex] === index);
+        if (members.length) for (let channel = 0; channel < 3; channel++) center[channel] = members.reduce((sum, color) => sum + color[channel], 0) / members.length;
+      });
+    }
+    return centers.map((center, index) => ({ red: center[0], green: center[1], blue: center[2], count: assignments.filter(value => value === index).length }))
+      .filter(cluster => cluster.count).sort((a, b) => b.count - a.count);
+  }
+  private colorDistance(a: number[], b: number[]): number {
+    const redMean = (a[0] + b[0]) / 2;
+    return (2 + redMean / 256) * (a[0] - b[0]) ** 2 + 4 * (a[1] - b[1]) ** 2 + (2 + (255 - redMean) / 256) * (a[2] - b[2]) ** 2;
+  }
+  private buildPalette(clusters: ColorCluster[]): AdaptivePalette {
+    const primary = clusters[0];
+    const ranked = clusters.map(color => ({ color, hsl: this.toHsl(color.red, color.green, color.blue) }));
+    const actionCandidate = [...ranked].sort((a, b) => (b.hsl.saturation * .7 + b.color.count / 1024 * .3) - (a.hsl.saturation * .7 + a.color.count / 1024 * .3))[0];
+    const accentPool = ranked.length > 1 ? ranked.filter(candidate => candidate !== actionCandidate) : ranked;
+    const accentCandidate = [...accentPool].sort((a, b) =>
+      (b.hsl.saturation * 120 + this.colorDistance([primary.red, primary.green, primary.blue], [b.color.red, b.color.green, b.color.blue])) -
+      (a.hsl.saturation * 120 + this.colorDistance([primary.red, primary.green, primary.blue], [a.color.red, a.color.green, a.color.blue])))[0];
+    const surface = this.safeHsl(primary, 28, 58, 38, 58);
+    const action = this.safeHsl(actionCandidate.color, 38, 68, 34, 52);
+    const accent = this.safeHsl(accentCandidate.color, 45, 75, 38, 60);
+    return { surface, action, accent, actionText: this.contrastText(actionCandidate.color) };
+  }
+  private toHsl(red: number, green: number, blue: number): { hue: number; saturation: number; lightness: number } {
     red /= 255; green /= 255; blue /= 255;
     const max = Math.max(red, green, blue), min = Math.min(red, green, blue);
     let hue = 0, saturation = 0;
@@ -325,7 +357,16 @@ export class StoryStudioComponent {
       else hue = 60 * ((red - green) / delta + 4);
     }
     if (hue < 0) hue += 360;
-    return `hsl(${Math.round(hue)} ${Math.round(Math.min(65, Math.max(28, saturation * 100)))}% ${Math.round(Math.min(58, Math.max(38, lightness * 100)))}%)`;
+    return { hue, saturation, lightness };
+  }
+  private safeHsl(color: ColorCluster, minSaturation: number, maxSaturation: number, minLightness: number, maxLightness: number): string {
+    const hsl = this.toHsl(color.red, color.green, color.blue);
+    return `hsl(${Math.round(hsl.hue)} ${Math.round(Math.min(maxSaturation, Math.max(minSaturation, hsl.saturation * 100)))}% ${Math.round(Math.min(maxLightness, Math.max(minLightness, hsl.lightness * 100)))}%)`;
+  }
+  private contrastText(color: ColorCluster): string {
+    const linear = (value: number) => { value /= 255; return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4; };
+    const luminance = .2126 * linear(color.red) + .7152 * linear(color.green) + .0722 * linear(color.blue);
+    return luminance > .42 ? '#1b1815' : '#fff';
   }
   openMedia(item: StudioItem): void {
     this.selectedMedia.set(item);

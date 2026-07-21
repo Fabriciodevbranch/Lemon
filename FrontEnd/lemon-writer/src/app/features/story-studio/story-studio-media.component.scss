@@ -26,9 +26,10 @@ button.gallery-card { font: inherit; }
 .collection-card > img, .collection-card > .card-mark { position: relative; z-index: 2; border-radius: 18px 18px 0 0; }
 .collection-card .card-body { position: relative; z-index: 2; border-radius: 0 0 18px 18px; background: var(--surface-color); }
 .collection-stack { position: absolute; z-index: 1; inset: 8px -7px -8px 7px; border: 1px solid var(--border-color); border-radius: 18px; background: var(--surface-color); }
-.collection-modal { width: min(100%, 940px); border: 1px solid color-mix(in srgb, var(--collection-color) 42%, var(--border-color)); background: linear-gradient(180deg, color-mix(in srgb, var(--collection-color) 18%, var(--surface-color)) 0, var(--surface-color) 245px); box-shadow: 0 30px 80px color-mix(in srgb, var(--collection-color) 18%, rgba(0,0,0,.25)); }
-.collection-modal > header .eyebrow { color: var(--collection-color); }
-.collection-modal .collection-media:hover { border-color: color-mix(in srgb, var(--collection-color) 58%, var(--border-color)); box-shadow: 0 8px 24px color-mix(in srgb, var(--collection-color) 12%, transparent); }
+.collection-modal { width: min(100%, 940px); border: 1px solid color-mix(in srgb, var(--palette-accent) 42%, var(--border-color)); background: linear-gradient(180deg, color-mix(in srgb, var(--palette-surface) 18%, var(--surface-color)) 0, var(--surface-color) 245px); box-shadow: 0 30px 80px color-mix(in srgb, var(--palette-surface) 18%, rgba(0,0,0,.25)); }
+.collection-modal > header .eyebrow { color: var(--palette-accent); }
+.collection-modal .icon-button:hover, .media-detail-modal .icon-button:hover { border-radius: 50%; background: var(--palette-action); color: var(--palette-action-text); }
+.collection-modal .collection-media:hover { border-color: color-mix(in srgb, var(--palette-accent) 58%, var(--border-color)); box-shadow: 0 8px 24px color-mix(in srgb, var(--palette-accent) 12%, transparent); }
 .collection-modal header p { margin: 4px 0 0; color: var(--text-secondary); }
 .collection-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
 .collection-media { position: relative; overflow: hidden; border: 1px solid var(--border-color); border-radius: 13px; background: var(--bg-color); cursor: pointer; }
@@ -37,10 +38,10 @@ button.gallery-card { font: inherit; }
 .collection-media p { margin: 6px 0 0; color: var(--text-secondary); }
 .collection-media .delete { top: 8px; right: 8px; }
 .media-detail-backdrop { z-index: 520; }
-.media-detail-modal { width: min(100%, 680px); border: 1px solid color-mix(in srgb, var(--media-color) 42%, var(--border-color)); background: linear-gradient(180deg, color-mix(in srgb, var(--media-color) 18%, var(--surface-color)) 0, var(--surface-color) 270px); box-shadow: 0 30px 80px color-mix(in srgb, var(--media-color) 18%, rgba(0,0,0,.25)); }
-.media-detail-modal > header .eyebrow { color: var(--media-color); }
-.media-detail-modal input:focus, .media-detail-modal textarea:focus { border-color: var(--media-color); outline: 2px solid color-mix(in srgb, var(--media-color) 22%, transparent); }
-.media-detail-modal .save-button { background: var(--media-color); }
+.media-detail-modal { width: min(100%, 680px); border: 1px solid color-mix(in srgb, var(--palette-accent) 42%, var(--border-color)); background: linear-gradient(180deg, color-mix(in srgb, var(--palette-surface) 18%, var(--surface-color)) 0, var(--surface-color) 270px); box-shadow: 0 30px 80px color-mix(in srgb, var(--palette-surface) 18%, rgba(0,0,0,.25)); }
+.media-detail-modal > header .eyebrow { color: var(--palette-accent); }
+.media-detail-modal input:focus, .media-detail-modal textarea:focus { border-color: var(--palette-accent); outline: 2px solid color-mix(in srgb, var(--palette-accent) 22%, transparent); }
+.media-detail-modal .save-button { background: var(--palette-action); color: var(--palette-action-text); }
 .media-detail-image { width: 100%; max-height: 380px; margin-bottom: 5px; border-radius: 13px; object-fit: contain; background: var(--bg-color); }
 @media (max-width: 620px) {
   .media-editor { grid-template-columns: 1fr; }
