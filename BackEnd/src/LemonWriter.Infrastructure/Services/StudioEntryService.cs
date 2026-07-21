@@ -59,9 +59,13 @@ public sealed class StudioEntryService(LemonDbContext db) : IStudioEntryService
         if (!IsSupportedType(type)) return Result<StudioEntryDto>.Failure(Error.Custom("UNKNOWN_TYPE", "Unknown studio entry type."));
         if (string.IsNullOrWhiteSpace(request.Name)) return Result<StudioEntryDto>.Failure(Error.Custom("NAME_REQUIRED", "Name is required."));
         if (request.Image?.Length > 7_000_000) return Result<StudioEntryDto>.Failure(Error.Custom("IMAGE_TOO_LARGE", "Image is too large."));
+        if (request.PortraitMediaId is Guid portraitId &&
+            !await db.StoryStudioEntries.AnyAsync(x => x.Id == portraitId && x.BookId == bookId && x.Type == "gallery", ct))
+            return Result<StudioEntryDto>.Failure(Error.Custom("INVALID_PORTRAIT", "The selected gallery image is unavailable."));
         var item = StoryStudioEntry.Create(bookId, type.ToLower(), request.Name, request.Summary, request.Details,
             request.Motivation, request.Plot, request.Image, request.EventDate, request.Impact,
-            SanitizeIds(request.CharacterIds), SanitizeIds(request.ObjectIds), SanitizeIds(request.PlaceIds), request.GoalTarget, request.GoalProgress ?? 0);
+            SanitizeIds(request.CharacterIds), SanitizeIds(request.ObjectIds), SanitizeIds(request.PlaceIds), request.GoalTarget, request.GoalProgress ?? 0,
+            storyRole: request.StoryRole, portraitMediaId: request.PortraitMediaId);
         if (type.Equals("timeline", StringComparison.OrdinalIgnoreCase))
             item.SetSortOrder(await db.StoryStudioEntries.CountAsync(x => x.BookId == bookId && x.Type == "timeline", ct));
         db.StoryStudioEntries.Add(item);
@@ -94,6 +98,24 @@ public sealed class StudioEntryService(LemonDbContext db) : IStudioEntryService
         return Result<StudioEntryDto>.Success(Map(item, collectionName));
     }
 
+    public async Task<Result<StudioEntryDto>> UpdateCharacterProfileAsync(Guid bookId, Guid id, UpdateCharacterProfileDto request, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name)) return Result<StudioEntryDto>.Failure(Error.Custom("NAME_REQUIRED", "Name is required."));
+        if (request.Name.Trim().Length > 300 || request.Summary?.Length > 1000)
+            return Result<StudioEntryDto>.Failure(Error.Custom("PROFILE_TOO_LONG", "The character identity fields are too long."));
+        if (request.PortraitMediaId is Guid portraitId &&
+            !await db.StoryStudioEntries.AnyAsync(x => x.Id == portraitId && x.BookId == bookId && x.Type == "gallery", ct))
+            return Result<StudioEntryDto>.Failure(Error.Custom("INVALID_PORTRAIT", "The selected gallery image is unavailable."));
+        var item = await db.StoryStudioEntries.SingleOrDefaultAsync(x => x.BookId == bookId && x.Id == id && x.Type == "characters", ct);
+        if (item is null) return Result<StudioEntryDto>.Failure(Error.NotFound);
+        item.UpdateCharacterProfile(request.Name, request.Summary, request.StoryRole, request.CharacterStatus, request.Age,
+            request.Pronouns, request.Aliases, request.PortraitMediaId, request.ExternalGoal, request.InternalNeed,
+            request.Fear, request.Secret, request.InternalConflict, request.ExternalConflict, request.NarrativeFunction,
+            request.ArcSummary, request.StartingState, request.TurningPoint, request.EndingState, request.Notes);
+        await db.SaveChangesAsync(ct);
+        return Result<StudioEntryDto>.Success(Map(item));
+    }
+
     public async Task<Result> DeleteEntryAsync(Guid bookId, Guid id, CancellationToken ct = default)
     {
         var item = await db.StoryStudioEntries.FirstOrDefaultAsync(x => x.BookId == bookId && x.Id == id, ct);
@@ -119,5 +141,8 @@ public sealed class StudioEntryService(LemonDbContext db) : IStudioEntryService
 
     private static StudioEntryDto Map(StoryStudioEntry x, string? collectionName = null) => new(x.Id, x.BookId, x.Type, x.Name, x.Summary, x.Details,
         x.Motivation, x.Plot, x.ImageData, x.CreatedAt, x.UpdatedAt, x.SortOrder, x.EventDate, x.Impact,
-        x.RelatedCharacterIds, x.RelatedObjectIds, x.RelatedPlaceIds, x.GoalTarget, x.GoalProgress, x.CollectionId, collectionName);
+        x.RelatedCharacterIds, x.RelatedObjectIds, x.RelatedPlaceIds, x.GoalTarget, x.GoalProgress, x.CollectionId, collectionName,
+        x.StoryRole, x.CharacterStatus, x.Age, x.Pronouns, x.Aliases, x.PortraitMediaId, x.ExternalGoal, x.InternalNeed,
+        x.Fear, x.Secret, x.InternalConflict, x.ExternalConflict, x.NarrativeFunction, x.ArcSummary, x.StartingState,
+        x.TurningPoint, x.EndingState, x.Notes);
 }

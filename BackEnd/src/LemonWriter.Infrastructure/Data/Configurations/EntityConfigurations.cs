@@ -111,6 +111,23 @@ public class StoryStudioEntryConfiguration : IEntityTypeConfiguration<StoryStudi
         builder.Property(x => x.RelatedPlaceIds).HasColumnType("text");
         builder.Property(x => x.GoalTarget);
         builder.Property(x => x.GoalProgress).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.StoryRole).HasMaxLength(40);
+        builder.Property(x => x.CharacterStatus).HasMaxLength(40);
+        builder.Property(x => x.Age).HasMaxLength(80);
+        builder.Property(x => x.Pronouns).HasMaxLength(100);
+        builder.Property(x => x.Aliases).HasColumnType("text");
+        builder.Property(x => x.ExternalGoal).HasColumnType("text");
+        builder.Property(x => x.InternalNeed).HasColumnType("text");
+        builder.Property(x => x.Fear).HasColumnType("text");
+        builder.Property(x => x.Secret).HasColumnType("text");
+        builder.Property(x => x.InternalConflict).HasColumnType("text");
+        builder.Property(x => x.ExternalConflict).HasColumnType("text");
+        builder.Property(x => x.NarrativeFunction).HasColumnType("text");
+        builder.Property(x => x.ArcSummary).HasColumnType("text");
+        builder.Property(x => x.StartingState).HasColumnType("text");
+        builder.Property(x => x.TurningPoint).HasColumnType("text");
+        builder.Property(x => x.EndingState).HasColumnType("text");
+        builder.Property(x => x.Notes).HasColumnType("text");
         builder.HasIndex(x => new { x.BookId, x.Type });
     }
 }

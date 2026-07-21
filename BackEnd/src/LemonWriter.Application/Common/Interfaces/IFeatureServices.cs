@@ -21,6 +21,7 @@ public interface IStudioEntryService
     Task<Result<StudioEntryDto>> CreateAsync(Guid bookId, string type, CreateStudioEntryDto request, CancellationToken ct = default);
     Task<Result<IReadOnlyList<StudioEntryDto>>> CreateGalleryBatchAsync(Guid bookId, CreateGalleryBatchDto request, CancellationToken ct = default);
     Task<Result<StudioEntryDto>> UpdateMetadataAsync(Guid bookId, Guid id, UpdateStudioEntryMetadataDto request, CancellationToken ct = default);
+    Task<Result<StudioEntryDto>> UpdateCharacterProfileAsync(Guid bookId, Guid id, UpdateCharacterProfileDto request, CancellationToken ct = default);
     Task<Result<StudioEntryDto>> UpdateGoalProgressAsync(Guid bookId, Guid id, int progress, CancellationToken ct = default);
     Task<Result> DeleteEntryAsync(Guid bookId, Guid id, CancellationToken ct = default);
 }

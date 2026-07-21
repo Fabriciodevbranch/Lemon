@@ -54,6 +54,15 @@ public sealed class StoryStudioController(
             ? NotFound() : BadRequest(new { message = result.Error!.Message });
     }
 
+    [HttpPut("characters/{id:guid}/profile")]
+    public async Task<IActionResult> UpdateCharacterProfile(Guid bookId, Guid id, UpdateCharacterProfile request, CancellationToken ct)
+    {
+        if (!await OwnsBook(bookId, ct)) return NotFound();
+        var result = await entries.UpdateCharacterProfileAsync(bookId, id, request.ToDto(), ct);
+        return result.IsSuccess ? Ok(result.Value) : result.Error == LemonWriter.Application.Common.Errors.Error.NotFound
+            ? NotFound() : BadRequest(new { message = result.Error!.Message });
+    }
+
     [HttpPatch("goals/{id:guid}/progress")]
     public async Task<IActionResult> UpdateGoalProgress(Guid bookId, Guid id, GoalProgressRequest request, CancellationToken ct)
     {
@@ -114,13 +123,23 @@ public sealed class StoryStudioController(
 }
 
 public record CreateStudioEntry(string Name, string? Summary, string? Details, string? Motivation, string? Plot, string? Image,
-    string? EventDate, string? Impact, string? CharacterIds, string? ObjectIds, string? PlaceIds, int? GoalTarget, int? GoalProgress)
+    string? EventDate, string? Impact, string? CharacterIds, string? ObjectIds, string? PlaceIds, int? GoalTarget, int? GoalProgress,
+    string? StoryRole = null, Guid? PortraitMediaId = null)
 {
     public CreateStudioEntryDto ToDto() => new(Name, Summary, Details, Motivation, Plot, Image, EventDate, Impact,
-        CharacterIds, ObjectIds, PlaceIds, GoalTarget, GoalProgress);
+        CharacterIds, ObjectIds, PlaceIds, GoalTarget, GoalProgress, StoryRole, PortraitMediaId);
 }
 public record GoalProgressRequest(int Progress);
 public record CreateGalleryBatch(string? CollectionName, IReadOnlyList<CreateStudioEntry> Items);
 public record UpdateStudioEntryMetadata(string Name, string? Summary, string? Details);
+public record UpdateCharacterProfile(string Name, string? Summary, string? StoryRole, string? CharacterStatus,
+    string? Age, string? Pronouns, string? Aliases, Guid? PortraitMediaId, string? ExternalGoal, string? InternalNeed,
+    string? Fear, string? Secret, string? InternalConflict, string? ExternalConflict, string? NarrativeFunction,
+    string? ArcSummary, string? StartingState, string? TurningPoint, string? EndingState, string? Notes)
+{
+    public UpdateCharacterProfileDto ToDto() => new(Name, Summary, StoryRole, CharacterStatus, Age, Pronouns, Aliases,
+        PortraitMediaId, ExternalGoal, InternalNeed, Fear, Secret, InternalConflict, ExternalConflict, NarrativeFunction,
+        ArcSummary, StartingState, TurningPoint, EndingState, Notes);
+}
 public record CreateRelationship(Guid From, Guid To, string? Label, string? Tone);
 public record ReorderTimelineRequest(IReadOnlyList<Guid> Ids);

@@ -90,3 +90,50 @@ describe('StoryStudioComponent gallery', () => {
     expect(root.querySelector('.unsorted-media-grid')).not.toBeNull();
   });
 });
+
+describe('StoryStudioComponent character quick creation', () => {
+  let fixture: ComponentFixture<StoryStudioComponent>;
+  let component: StoryStudioComponent;
+  let studio: jasmine.SpyObj<StoryStudioService>;
+
+  beforeEach(async () => {
+    studio = jasmine.createSpyObj<StoryStudioService>('StoryStudioService', ['metrics', 'list', 'create']);
+    studio.metrics.and.returnValue(of({ enabled: false, characters: 0, places: 0, objects: 0, gallery: 0, relationships: 0,
+      completeness: 0, storyCompleteness: 0, characterCoverage: 0, relationshipCoverage: 0, timelineCompleteness: 0,
+      orphanCharacters: 0, emptyLocations: 0, unusedObjects: 0 }));
+    studio.list.and.returnValue(of([]));
+    studio.create.and.returnValue(of({ id: 'new-char', name: 'Iris', summary: '', details: '' }));
+    await TestBed.configureTestingModule({ imports: [StoryStudioComponent], providers: [provideRouter([]),
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'book-1' }, data: { mode: 'characters' } } } },
+      { provide: StoryStudioService, useValue: studio },
+      { provide: AuthService, useValue: { currentUser$: of(null), logout: jasmine.createSpy('logout') } }
+    ] }).compileComponents();
+    fixture = TestBed.createComponent(StoryStudioComponent);
+    component = fixture.componentInstance;
+    component.loading.set(false);
+    component.openCreate();
+    fixture.detectChanges();
+  });
+
+  it('contains only quick identity fields and accessible close controls', () => {
+    const modal = (fixture.nativeElement as HTMLElement).querySelector('.studio-modal')!;
+    expect(modal.textContent).toContain('Name');
+    expect(modal.textContent).toContain('Short summary');
+    expect(modal.textContent).toContain('Story role');
+    expect(modal.textContent).toContain('Portrait from Gallery');
+    expect(modal.textContent).not.toContain('Motivation');
+    expect(modal.textContent).not.toContain('Plot involvement');
+    expect(modal.textContent).not.toContain('Details');
+    expect(modal.querySelector('.icon-button')?.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('requires a name but allows all optional fields to be omitted', () => {
+    component.saveItem();
+    expect(studio.create).not.toHaveBeenCalled();
+    component.draft.name = 'Iris';
+    component.saveItem();
+    expect(studio.create).toHaveBeenCalled();
+    expect(component.items().some(item => item.name === 'Iris')).toBeTrue();
+    expect(component.selectedCharacter()?.name).toBe('Iris');
+  });
+});

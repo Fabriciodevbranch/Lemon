@@ -140,8 +140,8 @@
       } @else {
         <div class="item-grid">
           @for (item of items(); track item.id) {
-            <article class="studio-card">
-              @if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }
+            <article class="studio-card" [class.character-card]="mode === 'characters'" [attr.role]="mode === 'characters' ? 'button' : null" [attr.tabindex]="mode === 'characters' ? 0 : null" (click)="mode === 'characters' ? openCharacter(item) : null" (keydown.enter)="mode === 'characters' ? openCharacter(item) : null">
+              @if (mode === 'characters' && characterPortrait(item)) { <img [src]="characterPortrait(item)" [alt]="item.name + ' portrait'"> } @else if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }
               <div class="card-body"><p class="eyebrow">{{ item.collectionName || meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>
                 @if (item.motivation) { <dl><dt>Motivation</dt><dd>{{ item.motivation }}</dd></dl> }
                 @if (item.plot) { <dl><dt>Plot role</dt><dd>{{ item.plot }}</dd></dl> }
@@ -157,8 +157,8 @@
 
 @if (dialogOpen()) {
   <div class="modal-backdrop" (click)="closeCreate()">
-    <section class="studio-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <header><div><p class="eyebrow">New entry</p><h2>Add {{ meta.singular }}</h2></div><button class="icon-button" (click)="closeCreate()"><mat-icon>close</mat-icon></button></header>
+    <section class="studio-modal" role="dialog" aria-modal="true" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
+      <header><div><p class="eyebrow">New entry</p><h2>Add {{ meta.singular }}</h2></div><button class="icon-button" type="button" [attr.aria-label]="'Close add ' + meta.singular + ' dialog'" (click)="closeCreate()"><mat-icon>close</mat-icon></button></header>
       @if (mode === 'relationships') {
         <label>From<select [(ngModel)]="relationshipDraft.from"><option value="">Choose a character</option>@for (item of items(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
         <label>To<select [(ngModel)]="relationshipDraft.to"><option value="">Choose a character</option>@for (item of items(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
@@ -191,6 +191,11 @@
           }
         }
         <label>{{ mode === 'timeline' ? 'Event title' : 'Name' }}<input [(ngModel)]="draft.name" [placeholder]="mode === 'timeline' ? 'The coronation, first contact…' : 'Name this ' + meta.singular"></label>
+        @if (mode === 'characters') {
+          @if (characterNameError()) { <p id="character-name-error" class="media-error" role="alert">{{ characterNameError() }}</p> }
+          <label>Story role (optional)<select [(ngModel)]="draft.storyRole"><option value="">Choose later</option><option>Protagonist</option><option>Antagonist</option><option>Supporting</option><option>Mentor</option><option>Minor</option><option>Background</option><option>Other</option></select></label>
+          <label>Portrait from Gallery (optional)<select [(ngModel)]="draft.portraitMediaId"><option value="">No portrait yet</option>@for (image of characterPortraits(); track image.id) { <option [value]="image.id">{{ image.name }}</option> }</select></label>
+        }
         @if (mode === 'timeline') {
           <label>Specific date or period (optional)<input [(ngModel)]="draft.eventDate" placeholder="14 March 1928, Third Age, Day 7…"></label>
           <label>Description<textarea [(ngModel)]="draft.details" rows="4" placeholder="What happens in this event?"></textarea></label>
@@ -203,15 +208,21 @@
           <label>Current word count<input type="number" min="0" [(ngModel)]="draft.goalProgress" placeholder="0"></label>
           <label>Deadline (optional)<input type="date" [(ngModel)]="draft.eventDate"></label>
           <label>Notes<textarea [(ngModel)]="draft.details" rows="3" placeholder="Why this goal matters, your plan, or a reward…"></textarea></label>
+        } @else if (mode === 'characters') {
+          <label>Short summary (optional)<input [(ngModel)]="draft.summary" placeholder="A quick sense of who they are"></label>
         } @else if (mode !== 'gallery' || mediaDrafts().length <= 1) {
           <label>Short summary<input [(ngModel)]="draft.summary" placeholder="A quick reference"></label>
           <label>Details<textarea [(ngModel)]="draft.details" rows="4" placeholder="Characteristics, attributes, history, atmosphere…"></textarea></label>
         }
-        @if (mode === 'characters') { <label>Motivation<textarea [(ngModel)]="draft.motivation" rows="2"></textarea></label><label>Plot involvement<textarea [(ngModel)]="draft.plot" rows="2"></textarea></label> }
-        <button class="save-button" (click)="saveItem()" [disabled]="mediaSaving()">{{ mediaSaving() ? 'Saving…' : mode === 'gallery' && mediaDrafts().length > 1 ? 'Save ' + mediaDrafts().length + ' media items' : 'Save ' + meta.singular }}</button>
+        @if (mode === 'characters') { <div class="character-create-actions"><button type="button" (click)="closeCreate()">Cancel</button><button class="save-button" (click)="saveItem()">Create character</button></div> }
+        @else { <button class="save-button" (click)="saveItem()" [disabled]="mediaSaving()">{{ mediaSaving() ? 'Saving…' : mode === 'gallery' && mediaDrafts().length > 1 ? 'Save ' + mediaDrafts().length + ' media items' : 'Save ' + meta.singular }}</button> }
       }
     </section>
   </div>
+}
+
+@if (selectedCharacter(); as character) {
+  <app-character-profile [character]="character" [portraits]="characterPortraits()" (closed)="closeCharacter()" (saved)="saveCharacterProfile($event)" (deleted)="deleteCharacter($event)"></app-character-profile>
 }
 
 @if (selectedCollection(); as collection) {

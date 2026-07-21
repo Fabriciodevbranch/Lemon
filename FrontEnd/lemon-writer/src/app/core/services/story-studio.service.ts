@@ -10,6 +10,9 @@ export interface StudioItemDto {
   characterIds?: string; objectIds?: string; placeIds?: string;
   goalTarget?: number; goalProgress?: number;
   collectionId?: string; collectionName?: string;
+  storyRole?: string; characterStatus?: string; age?: string; pronouns?: string; aliases?: string; portraitMediaId?: string;
+  externalGoal?: string; internalNeed?: string; fear?: string; secret?: string; internalConflict?: string; externalConflict?: string;
+  narrativeFunction?: string; arcSummary?: string; startingState?: string; turningPoint?: string; endingState?: string; notes?: string;
 }
 export interface RelationshipDto { id: string; from: string; to: string; label: string; tone: 'positive' | 'neutral' | 'negative'; }
 export interface StudioMetrics {
@@ -29,6 +32,9 @@ export class StoryStudioService {
   }
   updateMetadata(bookId: string, id: string, value: { name: string; summary: string; details: string }): Observable<StudioItemDto> {
     return this.http.put<StudioItemDto>(`${this.base(bookId)}/entries/${id}/metadata`, value);
+  }
+  updateCharacterProfile(bookId: string, id: string, value: Partial<StudioItemDto>): Observable<StudioItemDto> {
+    return this.http.put<StudioItemDto>(`${this.base(bookId)}/characters/${id}/profile`, value);
   }
   delete(bookId: string, id: string): Observable<void> { return this.http.delete<void>(`${this.base(bookId)}/entries/${id}`); }
   relationships(bookId: string): Observable<RelationshipDto[]> { return this.http.get<RelationshipDto[]>(`${this.base(bookId)}/relationships`); }

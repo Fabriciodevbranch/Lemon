@@ -64,14 +64,23 @@ public record LibraryBookStatsDto(int ChapterCount, int WordCount)
 public record StudioEntryDto(Guid Id, Guid BookId, string Type, string Name, string Summary, string Details,
     string? Motivation, string? Plot, string? ImageData, DateTime CreatedAt, DateTime UpdatedAt, int SortOrder,
     string? EventDate, string? Impact, string? RelatedCharacterIds, string? RelatedObjectIds, string? RelatedPlaceIds,
-    int? GoalTarget, int GoalProgress, Guid? CollectionId = null, string? CollectionName = null);
+    int? GoalTarget, int GoalProgress, Guid? CollectionId = null, string? CollectionName = null,
+    string? StoryRole = null, string? CharacterStatus = null, string? Age = null, string? Pronouns = null,
+    string? Aliases = null, Guid? PortraitMediaId = null, string? ExternalGoal = null, string? InternalNeed = null,
+    string? Fear = null, string? Secret = null, string? InternalConflict = null, string? ExternalConflict = null,
+    string? NarrativeFunction = null, string? ArcSummary = null, string? StartingState = null,
+    string? TurningPoint = null, string? EndingState = null, string? Notes = null);
 
 public record CreateStudioEntryDto(string Name, string? Summary, string? Details, string? Motivation, string? Plot,
     string? Image, string? EventDate, string? Impact, string? CharacterIds, string? ObjectIds, string? PlaceIds,
-    int? GoalTarget, int? GoalProgress);
+    int? GoalTarget, int? GoalProgress, string? StoryRole = null, Guid? PortraitMediaId = null);
 
 public record CreateGalleryBatchDto(string? CollectionName, IReadOnlyList<CreateStudioEntryDto> Items);
 public record UpdateStudioEntryMetadataDto(string Name, string? Summary, string? Details);
+public record UpdateCharacterProfileDto(string Name, string? Summary, string? StoryRole, string? CharacterStatus,
+    string? Age, string? Pronouns, string? Aliases, Guid? PortraitMediaId, string? ExternalGoal, string? InternalNeed,
+    string? Fear, string? Secret, string? InternalConflict, string? ExternalConflict, string? NarrativeFunction,
+    string? ArcSummary, string? StartingState, string? TurningPoint, string? EndingState, string? Notes);
 
 public record StoryRelationshipDto(Guid Id, Guid From, Guid To, string Label, string Tone);
 public record CreateStoryRelationshipDto(Guid From, Guid To, string? Label, string? Tone);

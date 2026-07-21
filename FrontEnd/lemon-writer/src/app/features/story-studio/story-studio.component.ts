@@ -6,6 +6,9 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
 import { StoryStudioService, StudioMetrics } from '../../core/services/story-studio.service';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DecimalPipe } from '@angular/common';
+import { CharacterProfileComponent } from './character-profile/character-profile.component';
+import { CharacterProfileModel, GalleryPortrait } from './character-profile/character-profile.model';
+import { A11yModule } from '@angular/cdk/a11y';
 
 type StudioMode = 'characters' | 'relationships' | 'places' | 'objects' | 'timeline' | 'goals' | 'lore' | 'magic' | 'research' | 'gallery' | 'metrics';
 
@@ -26,6 +29,9 @@ interface StudioItem {
   goalProgress?: number;
   collectionId?: string;
   collectionName?: string;
+  storyRole?: string; characterStatus?: string; age?: string; pronouns?: string; aliases?: string; portraitMediaId?: string;
+  externalGoal?: string; internalNeed?: string; fear?: string; secret?: string; internalConflict?: string; externalConflict?: string;
+  narrativeFunction?: string; arcSummary?: string; startingState?: string; turningPoint?: string; endingState?: string; notes?: string;
 }
 
 interface MediaDraft { fileName: string; name: string; summary: string; details: string; image: string; }
@@ -58,7 +64,7 @@ const MODE_META: Record<StudioMode, { title: string; eyebrow: string; descriptio
 @Component({
   selector: 'app-story-studio',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, RouterLink, RouterLinkActive, MatIconModule, DragDropModule, NavbarComponent],
+  imports: [FormsModule, DecimalPipe, RouterLink, RouterLinkActive, MatIconModule, DragDropModule, NavbarComponent, CharacterProfileComponent, A11yModule],
   templateUrl: './story-studio.component.html',
   styleUrls: ['./story-studio.component.scss', './story-studio-media.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager
@@ -88,6 +94,9 @@ export class StoryStudioComponent {
   readonly mediaSaving = signal(false);
   readonly selectedCollectionId = signal<string | null>(null);
   readonly selectedMedia = signal<StudioItem | null>(null);
+  readonly selectedCharacter = signal<StudioItem | null>(null);
+  readonly characterPortraits = signal<GalleryPortrait[]>([]);
+  readonly characterNameError = signal('');
   readonly mediaEditSaving = signal(false);
   readonly mediaEditError = signal('');
   readonly adaptivePalettes = signal<Record<string, AdaptivePalette>>({});
@@ -133,6 +142,8 @@ export class StoryStudioComponent {
       this.items.set(items.map(x => this.toStudioItem(x)));
       this.loading.set(false);
     }, error: () => this.loading.set(false) });
+    if (this.mode === 'characters') this.studio.list(this.bookId, 'gallery').subscribe(items =>
+      this.characterPortraits.set(items.map(x => ({ id: x.id, name: x.name, image: x.imageData }))));
     if (this.mode === 'timeline') {
       this.studio.list(this.bookId, 'characters').subscribe(items => this.timelineCharacters.set(items.map(x => this.toStudioItem(x))));
       this.studio.list(this.bookId, 'objects').subscribe(items => this.timelineObjects.set(items.map(x => this.toStudioItem(x))));
@@ -163,6 +174,7 @@ export class StoryStudioComponent {
     this.sharedDetails = '';
     this.mediaError.set('');
     this.mediaSaving.set(false);
+    this.characterNameError.set('');
     this.relationshipDraft = { tone: 'neutral' };
     this.dialogOpen.set(true);
   }
@@ -171,7 +183,8 @@ export class StoryStudioComponent {
 
   saveItem(): void {
     if (this.mode === 'gallery' && this.mediaDrafts().length > 1) { this.saveMediaBatch(); return; }
-    if (!this.draft.name?.trim()) return;
+    if (!this.draft.name?.trim()) { if (this.mode === 'characters') this.characterNameError.set('A name is required to create a character.'); return; }
+    this.characterNameError.set('');
     const item: StudioItem = {
       id: '',
       name: this.draft.name.trim(),
@@ -179,7 +192,7 @@ export class StoryStudioComponent {
       details: this.draft.details?.trim() ?? '',
       motivation: this.draft.motivation?.trim(),
       plot: this.draft.plot?.trim(),
-      image: this.draft.image
+      image: this.draft.image, storyRole: this.draft.storyRole, portraitMediaId: this.draft.portraitMediaId
       , eventDate: this.draft.eventDate?.trim(), impact: this.draft.impact?.trim(),
       characterIds: this.draft.characterIds ?? [], objectIds: this.draft.objectIds ?? [], placeIds: this.draft.placeIds ?? []
       , goalTarget: this.draft.goalTarget, goalProgress: this.draft.goalProgress ?? 0
@@ -190,6 +203,7 @@ export class StoryStudioComponent {
       this.items.update(items => this.mode === 'timeline' ? [...items, value] : [value, ...items]);
       this.studio.metrics(this.bookId).subscribe(value => this.metrics.set(value));
       this.closeCreate();
+      if (this.mode === 'characters') this.selectedCharacter.set(value);
     });
   }
 
@@ -395,6 +409,19 @@ export class StoryStudioComponent {
       }
     });
   }
+  openCharacter(item: StudioItem): void { this.selectedCharacter.set(item); }
+  closeCharacter(): void { this.selectedCharacter.set(null); }
+  saveCharacterProfile(profile: CharacterProfileModel): void {
+    this.studio.updateCharacterProfile(this.bookId, profile.id, profile).subscribe(saved => {
+      const value = this.toStudioItem(saved);
+      this.items.update(items => items.map(item => item.id === value.id ? value : item));
+      this.selectedCharacter.set(value);
+    });
+  }
+  deleteCharacter(id: string): void { this.remove(id); this.closeCharacter(); }
+  characterPortrait(item: StudioItem): string | undefined {
+    return this.characterPortraits().find(image => image.id === item.portraitMediaId)?.image ?? item.image;
+  }
 
   characterName(id: string): string {
     return this.items().find(item => item.id === id)?.name ?? 'Unknown';
@@ -419,6 +446,11 @@ export class StoryStudioComponent {
       eventDate: value.eventDate, impact: value.impact,
       goalTarget: value.goalTarget, goalProgress: value.goalProgress,
       collectionId: value.collectionId, collectionName: value.collectionName,
+      storyRole: value.storyRole, characterStatus: value.characterStatus, age: value.age, pronouns: value.pronouns,
+      aliases: value.aliases, portraitMediaId: value.portraitMediaId, externalGoal: value.externalGoal,
+      internalNeed: value.internalNeed, fear: value.fear, secret: value.secret, internalConflict: value.internalConflict,
+      externalConflict: value.externalConflict, narrativeFunction: value.narrativeFunction, arcSummary: value.arcSummary,
+      startingState: value.startingState, turningPoint: value.turningPoint, endingState: value.endingState, notes: value.notes,
       characterIds: this.ids(value.relatedCharacterIds), objectIds: this.ids(value.relatedObjectIds), placeIds: this.ids(value.relatedPlaceIds)
     };
   }
