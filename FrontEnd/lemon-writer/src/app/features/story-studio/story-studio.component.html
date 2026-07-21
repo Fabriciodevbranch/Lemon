@@ -100,7 +100,7 @@
         <div class="item-grid gallery-grid">
           @for (collection of mediaCollections(); track collection.id) {
             <button type="button" class="studio-card gallery-card collection-card" (click)="openCollection(collection.id)">
-              @if (collection.cover) { <img [src]="collection.cover" [alt]="collection.name"> } @else { <div class="card-mark"><mat-icon>collections</mat-icon></div> }
+              @if (collection.cover) { <img [src]="collection.cover" [alt]="collection.name" (load)="captureCollectionColor(collection.id, $event)"> } @else { <div class="card-mark"><mat-icon>collections</mat-icon></div> }
               <div class="collection-stack" aria-hidden="true"></div>
               <div class="card-body"><p class="eyebrow">Collection · {{ collection.items.length }} items</p><h2>{{ collection.name }}</h2><p>Open this collection to browse its media.</p></div>
             </button>
@@ -196,7 +196,7 @@
 
 @if (selectedCollection(); as collection) {
   <div class="modal-backdrop" (click)="closeCollection()">
-    <section class="studio-modal collection-modal" role="dialog" aria-modal="true" [attr.aria-label]="collection.name" (click)="$event.stopPropagation()">
+    <section class="studio-modal collection-modal" role="dialog" aria-modal="true" [attr.aria-label]="collection.name" [style.--collection-color]="collectionColor(collection.id)" (click)="$event.stopPropagation()">
       <header><div><p class="eyebrow">Media collection</p><h2>{{ collection.name }}</h2><p>{{ collection.items.length }} media items</p></div><button class="icon-button" (click)="closeCollection()"><mat-icon>close</mat-icon></button></header>
       <div class="collection-media-grid">
         @for (item of collection.items; track item.id) {
@@ -213,9 +213,9 @@
 
 @if (selectedMedia(); as media) {
   <div class="modal-backdrop media-detail-backdrop" (click)="closeMedia()">
-    <section class="studio-modal media-detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="media.name" (click)="$event.stopPropagation()">
+    <section class="studio-modal media-detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="media.name" [style.--media-color]="mediaColor(media)" (click)="$event.stopPropagation()">
       <header><div><p class="eyebrow">{{ media.collectionName || 'Media item' }}</p><h2>Edit media details</h2></div><button class="icon-button" (click)="closeMedia()"><mat-icon>close</mat-icon></button></header>
-      @if (media.image) { <img class="media-detail-image" [src]="media.image" [alt]="media.name"> }
+      @if (media.image) { <img class="media-detail-image" [src]="media.image" [alt]="media.name" (load)="captureCollectionColor('media-' + media.id, $event)"> }
       <label>Name<input [(ngModel)]="mediaEdit.name" maxlength="300"></label>
       <label>Short summary<input [(ngModel)]="mediaEdit.summary" maxlength="1000"></label>
       <label>Details<textarea [(ngModel)]="mediaEdit.details" rows="5"></textarea></label>

@@ -88,6 +88,7 @@ export class StoryStudioComponent {
   readonly selectedMedia = signal<StudioItem | null>(null);
   readonly mediaEditSaving = signal(false);
   readonly mediaEditError = signal('');
+  readonly collectionColors = signal<Record<string, string>>({});
   readonly characterCount = computed(() => this.metrics().characters);
   readonly placeCount = computed(() => this.metrics().places);
   readonly objectCount = computed(() => this.metrics().objects);
@@ -284,6 +285,48 @@ export class StoryStudioComponent {
 
   openCollection(id: string): void { this.selectedCollectionId.set(id); }
   closeCollection(): void { this.selectedCollectionId.set(null); }
+  collectionColor(id: string): string { return this.collectionColors()[id] ?? 'var(--primary-color)'; }
+  mediaColor(item: StudioItem): string {
+    return this.collectionColors()[`media-${item.id}`] ?? 'var(--primary-color)';
+  }
+  captureCollectionColor(id: string, event: Event): void {
+    if (this.collectionColors()[id]) return;
+    const image = event.currentTarget as HTMLImageElement;
+    const canvas = document.createElement('canvas');
+    canvas.width = 32; canvas.height = 32;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return;
+    try {
+      context.drawImage(image, 0, 0, 32, 32);
+      const pixels = context.getImageData(0, 0, 32, 32).data;
+      let red = 0, green = 0, blue = 0, weight = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i + 3] < 128) continue;
+        const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+        if (brightness < 18 || brightness > 242) continue;
+        const saturationWeight = Math.max(pixels[i], pixels[i + 1], pixels[i + 2]) - Math.min(pixels[i], pixels[i + 1], pixels[i + 2]) + 24;
+        red += pixels[i] * saturationWeight; green += pixels[i + 1] * saturationWeight; blue += pixels[i + 2] * saturationWeight; weight += saturationWeight;
+      }
+      if (!weight) return;
+      const color = this.normalizedAccent(red / weight, green / weight, blue / weight);
+      this.collectionColors.update(colors => ({ ...colors, [id]: color }));
+    } catch { /* Fall back to the theme color if canvas sampling is unavailable. */ }
+  }
+  private normalizedAccent(red: number, green: number, blue: number): string {
+    red /= 255; green /= 255; blue /= 255;
+    const max = Math.max(red, green, blue), min = Math.min(red, green, blue);
+    let hue = 0, saturation = 0;
+    const lightness = (max + min) / 2;
+    const delta = max - min;
+    if (delta) {
+      saturation = delta / (1 - Math.abs(2 * lightness - 1));
+      if (max === red) hue = 60 * (((green - blue) / delta) % 6);
+      else if (max === green) hue = 60 * ((blue - red) / delta + 2);
+      else hue = 60 * ((red - green) / delta + 4);
+    }
+    if (hue < 0) hue += 360;
+    return `hsl(${Math.round(hue)} ${Math.round(Math.min(65, Math.max(28, saturation * 100)))}% ${Math.round(Math.min(58, Math.max(38, lightness * 100)))}%)`;
+  }
   openMedia(item: StudioItem): void {
     this.selectedMedia.set(item);
     this.mediaEdit = { name: item.name, summary: item.summary, details: item.details };
