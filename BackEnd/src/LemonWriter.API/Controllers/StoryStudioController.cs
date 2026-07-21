@@ -98,7 +98,15 @@ public sealed class StoryStudioController(
     public async Task<IActionResult> CreateRelationship(Guid bookId, CreateRelationship request, CancellationToken ct)
     {
         if (!await OwnsBook(bookId, ct)) return NotFound();
-        var result = await relationships.CreateRelationshipAsync(bookId, new(request.From, request.To, request.Label, request.Tone), ct);
+        var result = await relationships.CreateRelationshipAsync(bookId, request.ToDto(), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { message = result.Error!.Message });
+    }
+
+    [HttpPut("relationships/{id:guid}")]
+    public async Task<IActionResult> UpdateRelationship(Guid bookId, Guid id, CreateRelationship request, CancellationToken ct)
+    {
+        if (!await OwnsBook(bookId, ct)) return NotFound();
+        var result = await relationships.UpdateRelationshipAsync(bookId, id, request.ToDto(), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { message = result.Error!.Message });
     }
 
@@ -141,5 +149,6 @@ public record UpdateCharacterProfile(string Name, string? Summary, string? Story
         PortraitMediaId, ExternalGoal, InternalNeed, Fear, Secret, InternalConflict, ExternalConflict, NarrativeFunction,
         ArcSummary, StartingState, TurningPoint, EndingState, Notes);
 }
-public record CreateRelationship(Guid From, Guid To, string? Label, string? Tone);
+public record CreateRelationship(Guid From, Guid To, string? Label, string? Tone, string RelationshipType = "Other", string? Description = null, string? Status = null)
+{ public CreateStoryRelationshipDto ToDto() => new(From, To, Label, Tone, RelationshipType, Description, Status); }
 public record ReorderTimelineRequest(IReadOnlyList<Guid> Ids);

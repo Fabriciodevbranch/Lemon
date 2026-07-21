@@ -126,7 +126,18 @@ public sealed class StudioEntryService(LemonDbContext db) : IStudioEntryService
             emptyCollection = await db.StoryMediaCollections.FirstOrDefaultAsync(x => x.Id == collectionId && x.BookId == bookId, ct);
         db.StoryStudioEntries.Remove(item);
         if (emptyCollection is not null) db.StoryMediaCollections.Remove(emptyCollection);
-        await db.StoryRelationships.Where(x => x.BookId == bookId && (x.FromEntryId == id || x.ToEntryId == id)).ExecuteDeleteAsync(ct);
+        if (item.Type == "characters")
+        {
+            db.CharacterMediaReferences.RemoveRange(db.CharacterMediaReferences.Where(x => x.BookId == bookId && x.CharacterId == id));
+            db.CharacterTimelineReferences.RemoveRange(db.CharacterTimelineReferences.Where(x => x.BookId == bookId && x.CharacterId == id));
+            var attributes = await db.CharacterCustomAttributes.Where(x => x.BookId == bookId && x.CharacterId == id).ToListAsync(ct);
+            var attributeIds = attributes.Select(x => x.Id).ToList();
+            db.CharacterAttributeOptions.RemoveRange(db.CharacterAttributeOptions.Where(x => attributeIds.Contains(x.AttributeId)));
+            db.CharacterCustomAttributes.RemoveRange(attributes);
+        }
+        if (item.Type == "gallery") db.CharacterMediaReferences.RemoveRange(db.CharacterMediaReferences.Where(x => x.BookId == bookId && x.MediaId == id));
+        if (item.Type == "timeline") db.CharacterTimelineReferences.RemoveRange(db.CharacterTimelineReferences.Where(x => x.BookId == bookId && x.EventId == id));
+        db.StoryRelationships.RemoveRange(db.StoryRelationships.Where(x => x.BookId == bookId && (x.FromEntryId == id || x.ToEntryId == id)));
         await db.SaveChangesAsync(ct);
         return Result.Success();
     }

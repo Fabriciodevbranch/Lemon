@@ -222,7 +222,7 @@
 }
 
 @if (selectedCharacter(); as character) {
-  <app-character-profile [character]="character" [portraits]="characterPortraits()" (closed)="closeCharacter()" (saved)="saveCharacterProfile($event)" (deleted)="deleteCharacter($event)"></app-character-profile>
+  <app-character-profile [bookId]="bookId" [character]="character" [characters]="items()" [portraits]="characterPortraits()" [events]="characterTimelineEvents()" (closed)="closeCharacter()" (saved)="saveCharacterProfile($event)" (deleted)="deleteCharacter($event)" (relatedCharacter)="openCharacterById($event)" (relatedMedia)="openRelatedMedia($event)" (relatedEvent)="openRelatedEvent($event)"></app-character-profile>
 }
 
 @if (selectedCollection(); as collection) {

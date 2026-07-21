@@ -44,7 +44,10 @@ interface Relationship {
   from: string;
   to: string;
   label: string;
-  tone: 'positive' | 'neutral' | 'negative';
+  tone: string;
+  relationshipType?: string;
+  description?: string;
+  status?: string;
 }
 
 const MODE_META: Record<StudioMode, { title: string; eyebrow: string; description: string; icon: string; singular: string }> = {
@@ -96,6 +99,7 @@ export class StoryStudioComponent {
   readonly selectedMedia = signal<StudioItem | null>(null);
   readonly selectedCharacter = signal<StudioItem | null>(null);
   readonly characterPortraits = signal<GalleryPortrait[]>([]);
+  readonly characterTimelineEvents = signal<StudioItem[]>([]);
   readonly characterNameError = signal('');
   readonly mediaEditSaving = signal(false);
   readonly mediaEditError = signal('');
@@ -142,8 +146,11 @@ export class StoryStudioComponent {
       this.items.set(items.map(x => this.toStudioItem(x)));
       this.loading.set(false);
     }, error: () => this.loading.set(false) });
-    if (this.mode === 'characters') this.studio.list(this.bookId, 'gallery').subscribe(items =>
-      this.characterPortraits.set(items.map(x => ({ id: x.id, name: x.name, image: x.imageData }))));
+    if (this.mode === 'characters') {
+      this.studio.list(this.bookId, 'gallery').subscribe(items =>
+        this.characterPortraits.set(items.map(x => ({ id: x.id, name: x.name, image: x.imageData, summary: x.summary }))));
+      this.studio.list(this.bookId, 'timeline').subscribe(items => this.characterTimelineEvents.set(items.map(x => this.toStudioItem(x))));
+    }
     if (this.mode === 'timeline') {
       this.studio.list(this.bookId, 'characters').subscribe(items => this.timelineCharacters.set(items.map(x => this.toStudioItem(x))));
       this.studio.list(this.bookId, 'objects').subscribe(items => this.timelineObjects.set(items.map(x => this.toStudioItem(x))));
@@ -410,6 +417,9 @@ export class StoryStudioComponent {
     });
   }
   openCharacter(item: StudioItem): void { this.selectedCharacter.set(item); }
+  openCharacterById(id: string): void { const character=this.items().find(x=>x.id===id); if(character)this.selectedCharacter.set(character); }
+  openRelatedMedia(id: string): void { const media=this.characterPortraits().find(x=>x.id===id); if(!media)return; this.selectedCharacter.set(null); this.selectedMedia.set({id:media.id,name:media.name,summary:media.summary??'',details:'',image:media.image}); }
+  openRelatedEvent(id: string): void { const event=this.characterTimelineEvents().find(x=>x.id===id); if(!event)return; this.selectedCharacter.set(null); this.selectedEvent.set(event); }
   closeCharacter(): void { this.selectedCharacter.set(null); }
   saveCharacterProfile(profile: CharacterProfileModel): void {
     this.studio.updateCharacterProfile(this.bookId, profile.id, profile).subscribe(saved => {

@@ -17,6 +17,10 @@ public class LemonDbContext : DbContext, IUnitOfWork
     public DbSet<StoryStudioEntry> StoryStudioEntries => Set<StoryStudioEntry>();
     public DbSet<StoryRelationship> StoryRelationships => Set<StoryRelationship>();
     public DbSet<StoryMediaCollection> StoryMediaCollections => Set<StoryMediaCollection>();
+    public DbSet<CharacterMediaReference> CharacterMediaReferences => Set<CharacterMediaReference>();
+    public DbSet<CharacterTimelineReference> CharacterTimelineReferences => Set<CharacterTimelineReference>();
+    public DbSet<CharacterCustomAttribute> CharacterCustomAttributes => Set<CharacterCustomAttribute>();
+    public DbSet<CharacterAttributeOption> CharacterAttributeOptions => Set<CharacterAttributeOption>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

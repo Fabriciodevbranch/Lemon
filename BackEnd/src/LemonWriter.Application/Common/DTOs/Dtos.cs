@@ -82,8 +82,23 @@ public record UpdateCharacterProfileDto(string Name, string? Summary, string? St
     string? Fear, string? Secret, string? InternalConflict, string? ExternalConflict, string? NarrativeFunction,
     string? ArcSummary, string? StartingState, string? TurningPoint, string? EndingState, string? Notes);
 
-public record StoryRelationshipDto(Guid Id, Guid From, Guid To, string Label, string Tone);
-public record CreateStoryRelationshipDto(Guid From, Guid To, string? Label, string? Tone);
+public record StoryRelationshipDto(Guid Id, Guid From, Guid To, string Label, string Tone,
+    string RelationshipType = "Other", string? Description = null, string? Status = null);
+public record CreateStoryRelationshipDto(Guid From, Guid To, string? Label, string? Tone,
+    string RelationshipType = "Other", string? Description = null, string? Status = null);
+
+public record CharacterMediaReferenceDto(Guid Id, Guid CharacterId, Guid MediaId, string Role, int DisplayOrder,
+    string MediaName, string? ImageData, Guid? CollectionId, string? CollectionName);
+public record SaveCharacterMediaReferenceDto(Guid MediaId, string Role, int DisplayOrder = 0);
+public record CharacterTimelineReferenceDto(Guid Id, Guid CharacterId, Guid EventId, string Role, string? Note,
+    string EventName, string? EventDate, int SortOrder, bool Legacy = false);
+public record SaveCharacterTimelineReferenceDto(Guid EventId, string Role, string? Note);
+public record CharacterAttributeDto(Guid Id, Guid CharacterId, string Label, string ValueType, string Value,
+    string? GroupName, int DisplayOrder, IReadOnlyList<string> Options);
+public record SaveCharacterAttributeDto(string Label, string ValueType, string Value, string? GroupName,
+    int DisplayOrder, IReadOnlyList<string>? Options);
+
+public record AppearancePreferenceDto(string? Theme, IReadOnlyDictionary<string, string> CustomVariables);
 
 public record StoryMetricsDto(bool Enabled, int Characters = 0, int Places = 0, int Objects = 0, int Gallery = 0,
     int Relationships = 0, int Completeness = 0, int StoryCompleteness = 0, int CharacterCoverage = 0,

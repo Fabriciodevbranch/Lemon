@@ -104,13 +104,20 @@ public sealed class StoryRelationship : Entity<Guid>
     public string Label { get; private set; } = string.Empty;
     public string Tone { get; private set; } = "neutral";
     public DateTime CreatedAt { get; private set; }
+    public string RelationshipType { get; private set; } = "Other";
+    public string? Description { get; private set; }
+    public string? Status { get; private set; }
 
     private StoryRelationship() { }
 
-    public static StoryRelationship Create(Guid bookId, Guid from, Guid to, string? label, string? tone) => new()
+    public static StoryRelationship Create(Guid bookId, Guid from, Guid to, string? label, string? tone,
+        string? relationshipType = null, string? description = null, string? status = null) => new()
     {
         Id = Guid.NewGuid(), BookId = bookId, FromEntryId = from, ToEntryId = to,
-        Label = string.IsNullOrWhiteSpace(label) ? "connected to" : label.Trim(),
-        Tone = tone is "positive" or "negative" ? tone : "neutral", CreatedAt = DateTime.UtcNow
+        Label = string.IsNullOrWhiteSpace(label) ? relationshipType ?? "Other" : label.Trim(),
+        Tone = string.IsNullOrWhiteSpace(tone) ? "neutral" : tone, RelationshipType = relationshipType ?? "Other",
+        Description = description?.Trim(), Status = status, CreatedAt = DateTime.UtcNow
     };
+    public void Update(string type, string? label, string? description, string? tone, string? status)
+    { RelationshipType = type; Label = string.IsNullOrWhiteSpace(label) ? type : label.Trim(); Description = description?.Trim(); Tone = tone ?? "neutral"; Status = status; }
 }

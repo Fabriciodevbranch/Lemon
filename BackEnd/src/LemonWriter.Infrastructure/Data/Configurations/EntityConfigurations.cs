@@ -88,6 +88,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.CreatedAt).IsRequired();
         builder.Property(u => u.IncludeExportBranding).IsRequired().HasDefaultValue(true);
         builder.Property(u => u.StoryMetricsEnabled).IsRequired().HasDefaultValue(false);
+        builder.Property(u => u.ThemePreference).HasMaxLength(30);
+        builder.Property(u => u.CustomThemeVariables).HasColumnType("text");
     }
 }
 
@@ -128,6 +130,8 @@ public class StoryStudioEntryConfiguration : IEntityTypeConfiguration<StoryStudi
         builder.Property(x => x.TurningPoint).HasColumnType("text");
         builder.Property(x => x.EndingState).HasColumnType("text");
         builder.Property(x => x.Notes).HasColumnType("text");
+        builder.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.PortraitMediaId)
+            .OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(x => new { x.BookId, x.Type });
     }
 }
@@ -139,6 +143,12 @@ public class StoryRelationshipConfiguration : IEntityTypeConfiguration<StoryRela
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Label).IsRequired().HasMaxLength(300);
         builder.Property(x => x.Tone).IsRequired().HasMaxLength(20);
+        builder.Property(x => x.RelationshipType).IsRequired().HasMaxLength(30);
+        builder.Property(x => x.Description).HasColumnType("text");
+        builder.Property(x => x.Status).HasMaxLength(20);
+        builder.HasOne<Book>().WithMany().HasForeignKey(x => x.BookId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.FromEntryId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.ToEntryId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(x => x.BookId);
     }
 }
@@ -150,5 +160,47 @@ public class StoryMediaCollectionConfiguration : IEntityTypeConfiguration<StoryM
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
         builder.HasIndex(x => new { x.BookId, x.Name });
+    }
+}
+
+public class CharacterMediaReferenceConfiguration : IEntityTypeConfiguration<CharacterMediaReference>
+{
+    public void Configure(EntityTypeBuilder<CharacterMediaReference> b)
+    {
+        b.HasKey(x => x.Id); b.Property(x => x.Role).IsRequired().HasMaxLength(40);
+        b.HasOne<Book>().WithMany().HasForeignKey(x => x.BookId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.CharacterId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.MediaId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(x => new { x.BookId, x.CharacterId, x.MediaId }).IsUnique();
+    }
+}
+public class CharacterTimelineReferenceConfiguration : IEntityTypeConfiguration<CharacterTimelineReference>
+{
+    public void Configure(EntityTypeBuilder<CharacterTimelineReference> b)
+    {
+        b.HasKey(x => x.Id); b.Property(x => x.Role).IsRequired().HasMaxLength(40); b.Property(x => x.Note).HasColumnType("text");
+        b.HasOne<Book>().WithMany().HasForeignKey(x => x.BookId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.CharacterId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.EventId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(x => new { x.BookId, x.CharacterId, x.EventId }).IsUnique();
+    }
+}
+public class CharacterCustomAttributeConfiguration : IEntityTypeConfiguration<CharacterCustomAttribute>
+{
+    public void Configure(EntityTypeBuilder<CharacterCustomAttribute> b)
+    {
+        b.HasKey(x => x.Id); b.Property(x => x.Label).IsRequired().HasMaxLength(160); b.Property(x => x.ValueType).IsRequired().HasMaxLength(30); b.Property(x => x.Value).IsRequired().HasColumnType("text"); b.Property(x => x.GroupName).HasMaxLength(100);
+        b.HasOne<Book>().WithMany().HasForeignKey(x => x.BookId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<StoryStudioEntry>().WithMany().HasForeignKey(x => x.CharacterId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(x => new { x.BookId, x.CharacterId });
+    }
+}
+public class CharacterAttributeOptionConfiguration : IEntityTypeConfiguration<CharacterAttributeOption>
+{
+    public void Configure(EntityTypeBuilder<CharacterAttributeOption> b)
+    {
+        b.HasKey(x => x.Id); b.Property(x => x.Value).IsRequired().HasMaxLength(300);
+        b.HasOne<CharacterCustomAttribute>().WithMany().HasForeignKey(x => x.AttributeId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(x => new { x.AttributeId, x.DisplayOrder });
     }
 }

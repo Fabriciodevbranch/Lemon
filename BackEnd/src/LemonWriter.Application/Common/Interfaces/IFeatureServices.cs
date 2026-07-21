@@ -14,6 +14,12 @@ public interface IPrivacyPreferenceService
     Task<Result> SetStoryMetricsEnabledAsync(Guid userId, bool enabled, CancellationToken ct = default);
 }
 
+public interface IAppearancePreferenceService
+{
+    Task<AppearancePreferenceDto?> GetAsync(Guid userId, CancellationToken ct = default);
+    Task<Result> SetAsync(Guid userId, AppearancePreferenceDto preference, CancellationToken ct = default);
+}
+
 public interface IStudioEntryService
 {
     bool IsSupportedType(string type);
@@ -35,7 +41,21 @@ public interface IRelationshipService
 {
     Task<IReadOnlyList<StoryRelationshipDto>> ListRelationshipsAsync(Guid bookId, CancellationToken ct = default);
     Task<Result<StoryRelationshipDto>> CreateRelationshipAsync(Guid bookId, CreateStoryRelationshipDto request, CancellationToken ct = default);
+    Task<Result<StoryRelationshipDto>> UpdateRelationshipAsync(Guid bookId, Guid id, CreateStoryRelationshipDto request, CancellationToken ct = default);
     Task<Result> DeleteRelationshipAsync(Guid bookId, Guid id, CancellationToken ct = default);
+}
+
+public interface ICharacterConnectionsService
+{
+    Task<Result<IReadOnlyList<CharacterMediaReferenceDto>>> ListMediaAsync(Guid bookId, Guid characterId, CancellationToken ct = default);
+    Task<Result<CharacterMediaReferenceDto>> SaveMediaAsync(Guid bookId, Guid characterId, Guid? id, SaveCharacterMediaReferenceDto request, CancellationToken ct = default);
+    Task<Result> DeleteMediaAsync(Guid bookId, Guid characterId, Guid id, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<CharacterTimelineReferenceDto>>> ListTimelineAsync(Guid bookId, Guid characterId, CancellationToken ct = default);
+    Task<Result<CharacterTimelineReferenceDto>> SaveTimelineAsync(Guid bookId, Guid characterId, Guid? id, SaveCharacterTimelineReferenceDto request, CancellationToken ct = default);
+    Task<Result> DeleteTimelineAsync(Guid bookId, Guid characterId, Guid id, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<CharacterAttributeDto>>> ListAttributesAsync(Guid bookId, Guid characterId, CancellationToken ct = default);
+    Task<Result<CharacterAttributeDto>> SaveAttributeAsync(Guid bookId, Guid characterId, Guid? id, SaveCharacterAttributeDto request, CancellationToken ct = default);
+    Task<Result> DeleteAttributeAsync(Guid bookId, Guid characterId, Guid id, CancellationToken ct = default);
 }
 
 public interface IStoryMetricsService

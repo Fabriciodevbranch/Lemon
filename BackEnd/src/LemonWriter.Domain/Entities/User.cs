@@ -12,6 +12,8 @@ public class User : AggregateRoot<Guid>
     public DateTime CreatedAt { get; private set; }
     public bool IncludeExportBranding { get; private set; } = true;
     public bool StoryMetricsEnabled { get; private set; }
+    public string? ThemePreference { get; private set; }
+    public string? CustomThemeVariables { get; private set; }
 
     private User() { }
 
@@ -39,4 +41,6 @@ public class User : AggregateRoot<Guid>
     public void UpdateProfile(string name) => Name = name;
     public void SetExportBranding(bool include) => IncludeExportBranding = include;
     public void SetStoryMetrics(bool enabled) => StoryMetricsEnabled = enabled;
+    public void SetAppearance(string theme, string customThemeVariables)
+    { ThemePreference = theme; CustomThemeVariables = customThemeVariables; }
 }

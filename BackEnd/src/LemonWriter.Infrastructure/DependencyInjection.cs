@@ -33,9 +33,11 @@ public static class DependencyInjection
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<ILibraryQueryService, LibraryQueryService>();
         services.AddScoped<IPrivacyPreferenceService, PrivacyPreferenceService>();
+        services.AddScoped<IAppearancePreferenceService, AppearancePreferenceService>();
         services.AddScoped<IStudioEntryService, StudioEntryService>();
         services.AddScoped<ITimelineService, TimelineService>();
         services.AddScoped<IRelationshipService, RelationshipService>();
+        services.AddScoped<ICharacterConnectionsService, CharacterConnectionsService>();
         services.AddScoped<IStoryMetricsService, StoryMetricsService>();
         services.AddScoped<EpubExportService>();
         services.AddScoped<PdfExportService>();

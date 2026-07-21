@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CharacterProfileComponent } from './character-profile.component';
 import { CharacterProfileModel } from './character-profile.model';
+import { StoryStudioService } from '../../../core/services/story-studio.service';
+import { of } from 'rxjs';
 
 describe('CharacterProfileComponent', () => {
   let fixture: ComponentFixture<CharacterProfileComponent>;
@@ -10,19 +12,29 @@ describe('CharacterProfileComponent', () => {
   };
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [CharacterProfileComponent] }).compileComponents();
+    const connections = jasmine.createSpyObj<StoryStudioService>('StoryStudioService', ['relationships', 'characterMedia', 'characterTimeline', 'characterAttributes']);
+    connections.relationships.and.returnValue(of([]));
+    connections.characterMedia.and.returnValue(of([]));
+    connections.characterTimeline.and.returnValue(of([]));
+    connections.characterAttributes.and.returnValue(of([]));
+    await TestBed.configureTestingModule({ imports: [CharacterProfileComponent], providers: [{ provide: StoryStudioService, useValue: connections }] }).compileComponents();
     fixture = TestBed.createComponent(CharacterProfileComponent);
+    fixture.componentRef.setInput('bookId', 'book-1');
     fixture.componentRef.setInput('character', character);
     fixture.componentRef.setInput('portraits', []);
     fixture.detectChanges();
   });
 
-  it('renders the profile header and four primary sections', () => {
+  it('renders the profile header and all progressive profile sections', () => {
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector('.profile-header')?.textContent).toContain('Mara');
     expect(root.querySelector('#character-overview')).not.toBeNull();
     expect(root.querySelector('#character-inner')).not.toBeNull();
     expect(root.querySelector('#character-arc')).not.toBeNull();
+    expect(root.querySelector('#character-relationships')).not.toBeNull();
+    expect(root.querySelector('#character-gallery')).not.toBeNull();
+    expect(root.querySelector('#character-timeline')).not.toBeNull();
+    expect(root.querySelector('#character-attributes')).not.toBeNull();
     expect(root.querySelector('#character-notes')).not.toBeNull();
     expect(root.querySelector('.profile-close')?.getAttribute('aria-label')).toBe('Close character profile');
   });
@@ -38,6 +50,10 @@ describe('CharacterProfileComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Their conscious goal can emerge');
     expect(text).toContain('No additional notes yet');
+    expect(text).toContain('No relationships yet');
+    expect(text).toContain('No visual references yet');
+    expect(text).toContain('not connected to any timeline events');
+    expect(text).toContain('No custom details yet');
   });
 
   it('emits structured edits when saved', () => {

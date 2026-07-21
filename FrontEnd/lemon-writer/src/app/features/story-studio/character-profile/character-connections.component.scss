@@ -1,0 +1,44 @@
+.connection-section { padding: 26px 0; border-top: 1px solid var(--border-color); scroll-margin-top: 70px; }
+.connection-section > header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+.connection-section h2 { margin: 0; font-size: 2rem; }
+.connection-section > header button, .connection-editor button { padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 9px; background: var(--bg-color); color: var(--text-primary); cursor: pointer; }
+.empty-copy { padding: 20px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); }
+.relationship-list, .event-list { display: grid; gap: 10px; }
+.relationship-list article, .event-list article { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 15px; border-radius: 12px; background: var(--bg-color); }
+.person { display: grid; justify-items: center; gap: 5px; border: 0; background: transparent; color: var(--text-primary); cursor: pointer; }
+.person span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--primary-color); color: #fff; }
+.relationship-list h3, .event-list h3 { margin: 2px 0; }
+.relationship-list p, .event-list p { margin: 5px 0; color: var(--text-secondary); }
+small, em { color: var(--text-secondary); }
+.actions { display: flex; gap: 5px; }
+.actions button { display: grid; place-items: center; padding: 6px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.linked-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.linked-gallery article { position: relative; overflow: hidden; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-color); }
+.linked-gallery img { display: block; width: 100%; height: 150px; object-fit: cover; }
+.linked-gallery article > div:not(.actions) { display: grid; padding: 12px; }
+.linked-gallery .actions { position: absolute; right: 6px; top: 6px; padding: 3px; border-radius: 9px; background: var(--surface-color); }
+.media-preview { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.event-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary-color); }
+.event-copy { padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.attribute-group { margin-top: 14px; }
+.attribute-group > h3 { color: var(--primary-color); }
+.attribute-group > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.attribute-group article { display: grid; grid-template-columns: 1fr auto auto; align-items: center; padding: 12px; border-radius: 10px; background: var(--bg-color); }
+.attribute-group article > span { color: var(--text-secondary); }
+.editor-backdrop { position: fixed; z-index: 750; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(20, 17, 14, .75); }
+.connection-editor { width: min(100%, 620px); max-height: 90dvh; overflow: auto; padding: 24px; border-radius: 18px; background: var(--surface-color); }
+.connection-editor > header { display: flex; justify-content: space-between; }
+.connection-editor label { display: grid; gap: 6px; margin-top: 12px; font-weight: 700; }
+.connection-editor input, .connection-editor select, .connection-editor textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-primary); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.connection-editor .save { width: 100%; margin-top: 18px; background: var(--primary-color); color: #fff; }
+.picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; max-height: 310px; overflow: auto; margin-top: 10px; }
+.picker-grid button { padding: 5px; overflow: hidden; }
+.picker-grid button.selected { border-color: var(--primary-color); }
+.picker-grid img { width: 100%; height: 80px; object-fit: cover; }
+.picker-grid span, .picker-grid small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.checkbox { display: flex !important; }
+.checkbox input { width: auto; }
+.error { color: #c76b60; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+@media (max-width: 700px) { .linked-gallery, .picker-grid, .attribute-group > div { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } }

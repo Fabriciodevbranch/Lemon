@@ -15,8 +15,6 @@ export class App implements OnInit {
   readonly loading = inject(LoadingService);
 
   ngOnInit(): void {
-    const theme = this.themeService.currentTheme();
-    this.themeService.applyTheme(theme);
-    this.themeService.loadSavedCustomVars();
+    this.themeService.initializeLocal();
   }
 }
