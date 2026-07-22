@@ -1,0 +1,5 @@
+.character-card-link { display: block; color: inherit; text-decoration: none; }
+.character-card-link > img, .character-card-link > .card-mark { width: 100%; height: 170px; object-fit: cover; }
+.character-card-link:focus-visible { outline: 3px solid var(--primary-color); outline-offset: -3px; }
+.profile-not-found { width: min(100%, 560px); min-height: 320px; background: var(--surface-color); }
+.profile-not-found a { padding: 12px 18px; border-radius: 10px; background: var(--primary-color); color: #fff; text-decoration: none; font-weight: 700; }

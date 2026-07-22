@@ -140,14 +140,11 @@
       } @else {
         <div class="item-grid">
           @for (item of items(); track item.id) {
-            <article class="studio-card" [class.character-card]="mode === 'characters'" [attr.role]="mode === 'characters' ? 'button' : null" [attr.tabindex]="mode === 'characters' ? 0 : null" (click)="mode === 'characters' ? openCharacter(item) : null" (keydown.enter)="mode === 'characters' ? openCharacter(item) : null">
-              @if (mode === 'characters' && characterPortrait(item)) { <img [src]="characterPortrait(item)" [alt]="item.name + ' portrait'"> } @else if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }
-              <div class="card-body"><p class="eyebrow">{{ item.collectionName || meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>
-                @if (item.motivation) { <dl><dt>Motivation</dt><dd>{{ item.motivation }}</dd></dl> }
-                @if (item.plot) { <dl><dt>Plot role</dt><dd>{{ item.plot }}</dd></dl> }
-              </div>
-              <button class="delete" (click)="remove(item.id)" aria-label="Delete"><mat-icon>delete</mat-icon></button>
-            </article>
+            @if (mode === 'characters') {
+              <article class="studio-card character-card"><a class="character-card-link" [routerLink]="['/books', bookId, 'characters', item.id]" fragment="overview">@if (characterPortrait(item)) { <img [src]="characterPortrait(item)" [alt]="item.name + ' portrait'"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }<div class="card-body"><p class="eyebrow">{{ meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>@if (item.motivation) { <dl><dt>Motivation</dt><dd>{{ item.motivation }}</dd></dl> }@if (item.plot) { <dl><dt>Plot role</dt><dd>{{ item.plot }}</dd></dl> }</div></a><button type="button" class="delete" (click)="remove(item.id)" [attr.aria-label]="'Delete ' + item.name"><mat-icon>delete</mat-icon></button></article>
+            } @else {
+              <article class="studio-card">@if (item.image) { <img [src]="item.image" [alt]="item.name"> } @else { <div class="card-mark"><mat-icon>{{ meta.icon }}</mat-icon></div> }<div class="card-body"><p class="eyebrow">{{ item.collectionName || meta.singular }}</p><h2>{{ item.name }}</h2><p>{{ item.summary || item.details || 'No description yet.' }}</p>@if (item.motivation) { <dl><dt>Motivation</dt><dd>{{ item.motivation }}</dd></dl> }@if (item.plot) { <dl><dt>Plot role</dt><dd>{{ item.plot }}</dd></dl> }</div><button type="button" class="delete" (click)="remove(item.id)" aria-label="Delete"><mat-icon>delete</mat-icon></button></article>
+            }
           }
         </div>
       }
@@ -222,7 +219,9 @@
 }
 
 @if (selectedCharacter(); as character) {
-  <app-character-profile [bookId]="bookId" [character]="character" [characters]="items()" [portraits]="characterPortraits()" [events]="characterTimelineEvents()" (closed)="closeCharacter()" (saved)="saveCharacterProfile($event)" (deleted)="deleteCharacter($event)" (relatedCharacter)="openCharacterById($event)" (relatedMedia)="openRelatedMedia($event)" (relatedEvent)="openRelatedEvent($event)"></app-character-profile>
+  <app-character-profile [bookId]="bookId" [character]="character" [characters]="items()" [portraits]="characterPortraits()" [events]="characterTimelineEvents()" [saving]="profileSaving()" [saveError]="profileSaveError()" (closed)="closeCharacter()" (saved)="saveCharacterProfile($event)" (deleted)="deleteCharacter($event)" (relatedCharacter)="openCharacterById($event)" (relatedMedia)="openRelatedMedia($event)" (relatedEvent)="openRelatedEvent($event)"></app-character-profile>
+} @else if (characterId && !loading() && profileError()) {
+  <div class="modal-backdrop"><section class="empty-studio profile-not-found" role="alert"><mat-icon>person_off</mat-icon><h2>Character not found</h2><p>{{ profileError() }}</p><a [routerLink]="['/books', bookId, 'characters']">Back to characters</a></section></div>
 }
 
 @if (selectedCollection(); as collection) {

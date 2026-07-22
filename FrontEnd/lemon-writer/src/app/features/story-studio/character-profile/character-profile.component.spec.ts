@@ -3,21 +3,25 @@ import { CharacterProfileComponent } from './character-profile.component';
 import { CharacterProfileModel } from './character-profile.model';
 import { StoryStudioService } from '../../../core/services/story-studio.service';
 import { of } from 'rxjs';
+import { Subject } from 'rxjs';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 
 describe('CharacterProfileComponent', () => {
   let fixture: ComponentFixture<CharacterProfileComponent>;
+  let fragments: Subject<string | null>;
   const character: CharacterProfileModel = {
     id: 'char-1', name: 'Mara', summary: 'A reluctant guide', details: 'Legacy biography',
     motivation: 'Legacy motivation', plot: 'Legacy plot involvement'
   };
 
   beforeEach(async () => {
+    fragments = new Subject<string | null>();
     const connections = jasmine.createSpyObj<StoryStudioService>('StoryStudioService', ['relationships', 'characterMedia', 'characterTimeline', 'characterAttributes']);
     connections.relationships.and.returnValue(of([]));
     connections.characterMedia.and.returnValue(of([]));
     connections.characterTimeline.and.returnValue(of([]));
     connections.characterAttributes.and.returnValue(of([]));
-    await TestBed.configureTestingModule({ imports: [CharacterProfileComponent], providers: [{ provide: StoryStudioService, useValue: connections }] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [CharacterProfileComponent], providers: [provideRouter([]), { provide: ActivatedRoute, useValue: { fragment: fragments.asObservable() } }, { provide: StoryStudioService, useValue: connections }] }).compileComponents();
     fixture = TestBed.createComponent(CharacterProfileComponent);
     fixture.componentRef.setInput('bookId', 'book-1');
     fixture.componentRef.setInput('character', character);
@@ -36,7 +40,37 @@ describe('CharacterProfileComponent', () => {
     expect(root.querySelector('#character-timeline')).not.toBeNull();
     expect(root.querySelector('#character-attributes')).not.toBeNull();
     expect(root.querySelector('#character-notes')).not.toBeNull();
-    expect(root.querySelector('.profile-close')?.getAttribute('aria-label')).toBe('Close character profile');
+    expect(root.querySelector('.profile-close')?.getAttribute('aria-label')).toBe('Back to characters');
+  });
+
+  it('renders every section navigation item as a keyboard-native deep link', () => {
+    const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.profile-nav a')];
+    expect(links.map(link => link.textContent?.trim())).toEqual(['Overview', 'Inner world', 'Story arc', 'Relationships', 'Gallery', 'Timeline', 'Custom attributes', 'Notes']);
+    expect(links.map(link => link.getAttribute('href'))).toEqual([
+      '/books/book-1/characters/char-1#overview', '/books/book-1/characters/char-1#inner', '/books/book-1/characters/char-1#arc',
+      '/books/book-1/characters/char-1#relationships', '/books/book-1/characters/char-1#gallery', '/books/book-1/characters/char-1#timeline',
+      '/books/book-1/characters/char-1#attributes', '/books/book-1/characters/char-1#notes'
+    ]);
+    links.forEach(link => expect(link.tabIndex).toBeGreaterThanOrEqual(0));
+  });
+
+  it('tracks fragment changes for active state, including history-style changes', () => {
+    fragments.next('timeline'); fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.profile-nav a.active')?.textContent).toContain('Timeline');
+    fragments.next('inner'); fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.profile-nav a.active')?.textContent).toContain('Inner world');
+  });
+
+  it('opens identity and each editable section with a fresh character draft', () => {
+    const root = fixture.nativeElement as HTMLElement;
+    root.querySelector<HTMLButtonElement>('.edit-profile')!.click(); expect(fixture.componentInstance.editing()).toBe('overview');
+    fixture.componentInstance.cancel();
+    for (const [sectionId, state] of [['character-overview','overview'], ['character-inner','inner'], ['character-arc','arc'], ['character-notes','notes']] as const) {
+      root.querySelector<HTMLButtonElement>(`#${sectionId} > header button`)!.click();
+      expect(fixture.componentInstance.editing()).toBe(state);
+      expect(fixture.componentInstance.draft.id).toBe('char-1');
+      fixture.componentInstance.cancel(); fixture.detectChanges();
+    }
   });
 
   it('keeps legacy details, motivation, and plot content visible', () => {

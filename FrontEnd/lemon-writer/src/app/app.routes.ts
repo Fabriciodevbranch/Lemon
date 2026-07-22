@@ -30,6 +30,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/book-settings/book-settings.component').then(m => m.BookSettingsComponent)
   },
+  {
+    path: 'books/:bookId/characters/:characterId',
+    canActivate: [authGuard],
+    data: { mode: 'characters' },
+    loadComponent: () => import('./features/story-studio/story-studio.component').then(m => m.StoryStudioComponent)
+  },
   ...(['characters', 'relationships', 'places', 'objects', 'timeline', 'goals', 'lore', 'magic', 'research', 'gallery', 'metrics'] as const).map(mode => ({
     path: `books/:bookId/${mode}`,
     canActivate: [authGuard],

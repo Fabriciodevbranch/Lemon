@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { StoryStudioService, StudioMetrics } from '../../core/services/story-studio.service';
@@ -69,13 +69,15 @@ const MODE_META: Record<StudioMode, { title: string; eyebrow: string; descriptio
   standalone: true,
   imports: [FormsModule, DecimalPipe, RouterLink, RouterLinkActive, MatIconModule, DragDropModule, NavbarComponent, CharacterProfileComponent, A11yModule],
   templateUrl: './story-studio.component.html',
-  styleUrls: ['./story-studio.component.scss', './story-studio-media.component.scss'],
+  styleUrls: ['./story-studio.component.scss', './story-studio-media.component.scss', './story-studio-navigation.component.scss'],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class StoryStudioComponent {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private studio = inject(StoryStudioService);
   readonly bookId = this.route.snapshot.paramMap.get('bookId')!;
+  readonly characterId = this.route.snapshot.paramMap.get('characterId');
   readonly mode = this.route.snapshot.data['mode'] as StudioMode;
   readonly meta = MODE_META[this.mode];
 
@@ -101,6 +103,9 @@ export class StoryStudioComponent {
   readonly characterPortraits = signal<GalleryPortrait[]>([]);
   readonly characterTimelineEvents = signal<StudioItem[]>([]);
   readonly characterNameError = signal('');
+  readonly profileError = signal('');
+  readonly profileSaving = signal(false);
+  readonly profileSaveError = signal('');
   readonly mediaEditSaving = signal(false);
   readonly mediaEditError = signal('');
   readonly adaptivePalettes = signal<Record<string, AdaptivePalette>>({});
@@ -143,9 +148,15 @@ export class StoryStudioComponent {
       return;
     }
     this.studio.list(this.bookId, this.mode).subscribe({ next: items => {
-      this.items.set(items.map(x => this.toStudioItem(x)));
+      const values = items.map(x => this.toStudioItem(x));
+      this.items.set(values);
+      if (this.characterId) {
+        const character = values.find(x => x.id === this.characterId);
+        if (character) this.selectedCharacter.set(character);
+        else this.profileError.set('This character could not be found in this book.');
+      }
       this.loading.set(false);
-    }, error: () => this.loading.set(false) });
+    }, error: () => { if (this.characterId) this.profileError.set('This character could not be found in this book.'); this.loading.set(false); } });
     if (this.mode === 'characters') {
       this.studio.list(this.bookId, 'gallery').subscribe(items =>
         this.characterPortraits.set(items.map(x => ({ id: x.id, name: x.name, image: x.imageData, summary: x.summary }))));
@@ -210,7 +221,7 @@ export class StoryStudioComponent {
       this.items.update(items => this.mode === 'timeline' ? [...items, value] : [value, ...items]);
       this.studio.metrics(this.bookId).subscribe(value => this.metrics.set(value));
       this.closeCreate();
-      if (this.mode === 'characters') this.selectedCharacter.set(value);
+      if (this.mode === 'characters') void this.router.navigate(['/books', this.bookId, 'characters', value.id], { fragment: 'overview' });
     });
   }
 
@@ -416,17 +427,19 @@ export class StoryStudioComponent {
       }
     });
   }
-  openCharacter(item: StudioItem): void { this.selectedCharacter.set(item); }
-  openCharacterById(id: string): void { const character=this.items().find(x=>x.id===id); if(character)this.selectedCharacter.set(character); }
+  openCharacter(item: StudioItem): void { void this.router.navigate(['/books', this.bookId, 'characters', item.id], { fragment: 'overview' }); }
+  openCharacterById(id: string): void { if(this.items().some(x=>x.id===id)) void this.router.navigate(['/books', this.bookId, 'characters', id], { fragment: 'overview' }); }
   openRelatedMedia(id: string): void { const media=this.characterPortraits().find(x=>x.id===id); if(!media)return; this.selectedCharacter.set(null); this.selectedMedia.set({id:media.id,name:media.name,summary:media.summary??'',details:'',image:media.image}); }
   openRelatedEvent(id: string): void { const event=this.characterTimelineEvents().find(x=>x.id===id); if(!event)return; this.selectedCharacter.set(null); this.selectedEvent.set(event); }
-  closeCharacter(): void { this.selectedCharacter.set(null); }
+  closeCharacter(): void { void this.router.navigate(['/books', this.bookId, 'characters']); }
   saveCharacterProfile(profile: CharacterProfileModel): void {
-    this.studio.updateCharacterProfile(this.bookId, profile.id, profile).subscribe(saved => {
-      const value = this.toStudioItem(saved);
-      this.items.update(items => items.map(item => item.id === value.id ? value : item));
-      this.selectedCharacter.set(value);
-    });
+    this.profileSaving.set(true); this.profileSaveError.set('');
+    this.studio.updateCharacterProfile(this.bookId, profile.id, profile).subscribe({ next: saved => {
+      const value = this.toStudioItem(saved); this.items.update(items => items.map(item => item.id === value.id ? value : item));
+      this.selectedCharacter.set(value); this.profileSaving.set(false);
+    }, error: () => {
+      this.profileSaveError.set('The character profile could not be saved. Please try again.'); this.profileSaving.set(false);
+    } });
   }
   deleteCharacter(id: string): void { this.remove(id); this.closeCharacter(); }
   characterPortrait(item: StudioItem): string | undefined {
