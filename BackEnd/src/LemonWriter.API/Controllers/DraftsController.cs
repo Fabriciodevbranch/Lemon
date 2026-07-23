@@ -10,6 +10,9 @@ namespace LemonWriter.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+/// <summary>
+/// Endpoints for draft creation, updates, publishing, and deletion.
+/// </summary>
 public class DraftsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -24,6 +27,9 @@ public class DraftsController : ControllerBase
     }
 
     [HttpGet]
+    /// <summary>
+    /// Lists drafts for a chapter.
+    /// </summary>
     public async Task<IActionResult> GetDrafts([FromQuery] Guid chapterId, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(chapterId, cancellationToken)) return NotFound();
@@ -32,6 +38,9 @@ public class DraftsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    /// <summary>
+    /// Gets a draft by identifier.
+    /// </summary>
     public async Task<IActionResult> GetDraft(Guid id, CancellationToken cancellationToken)
     {
         if (!await OwnsDraft(id, cancellationToken)) return NotFound();
@@ -40,6 +49,9 @@ public class DraftsController : ControllerBase
     }
 
     [HttpPost]
+    /// <summary>
+    /// Creates a draft in a chapter.
+    /// </summary>
     public async Task<IActionResult> CreateDraft([FromBody] CreateDraftRequest request, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(request.ChapterId, cancellationToken)) return NotFound();
@@ -50,6 +62,9 @@ public class DraftsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    /// <summary>
+    /// Updates draft title and content.
+    /// </summary>
     public async Task<IActionResult> UpdateDraft(Guid id, [FromBody] UpdateDraftRequest request, CancellationToken cancellationToken)
     {
         if (!await OwnsDraft(id, cancellationToken)) return NotFound();
@@ -58,6 +73,9 @@ public class DraftsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/publish")]
+    /// <summary>
+    /// Publishes a draft to the underlying chapter.
+    /// </summary>
     public async Task<IActionResult> PublishDraft(Guid id, [FromBody] PublishDraftRequest request, CancellationToken cancellationToken)
     {
         if (!await OwnsDraft(id, cancellationToken)) return NotFound();
@@ -67,14 +85,25 @@ public class DraftsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    /// <summary>
+    /// Deletes a draft.
+    /// </summary>
     public async Task<IActionResult> DeleteDraft(Guid id, CancellationToken cancellationToken)
     {
         if (!await OwnsDraft(id, cancellationToken)) return NotFound();
         var result = await _mediator.Send(new DeleteDraftCommand(id), cancellationToken);
         return result.IsSuccess ? NoContent() : NotFound(new { error = result.Error!.Message });
     }
-    private Task<bool> OwnsChapter(Guid id, CancellationToken ct) => _currentUserService.UserId is Guid userId ? _authorization.OwnsChapterAsync(userId, id, ct) : Task.FromResult(false);
-    private Task<bool> OwnsDraft(Guid id, CancellationToken ct) => _currentUserService.UserId is Guid userId ? _authorization.OwnsDraftAsync(userId, id, ct) : Task.FromResult(false);
+
+    private Task<bool> OwnsChapter(Guid id, CancellationToken ct)
+        => _currentUserService.UserId is Guid userId
+            ? _authorization.OwnsChapterAsync(userId, id, ct)
+            : Task.FromResult(false);
+
+    private Task<bool> OwnsDraft(Guid id, CancellationToken ct)
+        => _currentUserService.UserId is Guid userId
+            ? _authorization.OwnsDraftAsync(userId, id, ct)
+            : Task.FromResult(false);
 }
 
 public record CreateDraftRequest(Guid ChapterId, string Title, string InitialContent = "");

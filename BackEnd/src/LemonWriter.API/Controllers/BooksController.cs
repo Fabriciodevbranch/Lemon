@@ -10,16 +10,35 @@ namespace LemonWriter.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+/// <summary>
+/// Endpoints for managing books owned by the authenticated user.
+/// </summary>
 public class BooksController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILibraryQueryService _library;
     private readonly ICurrentUserService _currentUser;
     private readonly IResourceAuthorizationService _authorization;
-    public BooksController(IMediator mediator, ILibraryQueryService library, ICurrentUserService currentUser, IResourceAuthorizationService authorization)
-    { _mediator = mediator; _library = library; _currentUser = currentUser; _authorization = authorization; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BooksController"/> class.
+    /// </summary>
+    public BooksController(
+        IMediator mediator,
+        ILibraryQueryService library,
+        ICurrentUserService currentUser,
+        IResourceAuthorizationService authorization)
+    {
+        _mediator = mediator;
+        _library = library;
+        _currentUser = currentUser;
+        _authorization = authorization;
+    }
 
     [HttpGet]
+    /// <summary>
+    /// Lists books for the current authenticated user.
+    /// </summary>
     public async Task<IActionResult> GetBooks([FromQuery] Guid authorId, CancellationToken cancellationToken)
     {
         var userId = _currentUser.UserId;
@@ -38,6 +57,9 @@ public class BooksController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    /// <summary>
+    /// Gets a single book by identifier when the current user owns it.
+    /// </summary>
     public async Task<IActionResult> GetBook(Guid id, CancellationToken cancellationToken)
     {
         if (!await Owns(id, cancellationToken)) return NotFound();
@@ -46,6 +68,9 @@ public class BooksController : ControllerBase
     }
 
     [HttpPost]
+    /// <summary>
+    /// Creates a new book for the current authenticated user.
+    /// </summary>
     public async Task<IActionResult> CreateBook([FromBody] CreateBookRequest request, CancellationToken cancellationToken)
     {
         var userId = _currentUser.UserId;
@@ -61,6 +86,9 @@ public class BooksController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    /// <summary>
+    /// Updates a book when the current user owns it.
+    /// </summary>
     public async Task<IActionResult> UpdateBook(Guid id, [FromBody] UpdateBookRequest request, CancellationToken cancellationToken)
     {
         if (!await Owns(id, cancellationToken)) return NotFound();
@@ -73,6 +101,9 @@ public class BooksController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    /// <summary>
+    /// Deletes a book when the current user owns it.
+    /// </summary>
     public async Task<IActionResult> DeleteBook(Guid id, CancellationToken cancellationToken)
     {
         if (!await Owns(id, cancellationToken)) return NotFound();
@@ -81,6 +112,9 @@ public class BooksController : ControllerBase
     }
 
     [HttpPost("{id:guid}/cover")]
+    /// <summary>
+    /// Uploads and stores a cover image for a book.
+    /// </summary>
     public async Task<IActionResult> UploadCover(Guid id, IFormFile cover, CancellationToken cancellationToken)
     {
         if (!await Owns(id, cancellationToken)) return NotFound();
@@ -114,8 +148,10 @@ public class BooksController : ControllerBase
             : BadRequest(new { error = updateResult.Error!.Message });
     }
 
-    private Task<bool> Owns(Guid bookId, CancellationToken ct) => _currentUser.UserId is Guid userId
-        ? _authorization.OwnsBookAsync(userId, bookId, ct) : Task.FromResult(false);
+    private Task<bool> Owns(Guid bookId, CancellationToken ct)
+        => _currentUser.UserId is Guid userId
+            ? _authorization.OwnsBookAsync(userId, bookId, ct)
+            : Task.FromResult(false);
 }
 
 public record CreateBookRequest(

@@ -11,6 +11,9 @@ namespace LemonWriter.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+/// <summary>
+/// Endpoints for snapshot lifecycle and chapter restoration workflows.
+/// </summary>
 public class SnapshotsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -25,6 +28,9 @@ public class SnapshotsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    /// <summary>
+    /// Gets a snapshot by identifier.
+    /// </summary>
     public async Task<IActionResult> GetSnapshot(Guid id, CancellationToken cancellationToken)
     {
         if (!await OwnsSnapshot(id, cancellationToken)) return NotFound();
@@ -33,6 +39,9 @@ public class SnapshotsController : ControllerBase
     }
 
     [HttpGet("timeline/{chapterId:guid}")]
+    /// <summary>
+    /// Lists snapshots for a chapter timeline.
+    /// </summary>
     public async Task<IActionResult> GetTimeline(Guid chapterId, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(chapterId, cancellationToken)) return NotFound();
@@ -41,6 +50,9 @@ public class SnapshotsController : ControllerBase
     }
 
     [HttpPost]
+    /// <summary>
+    /// Creates a snapshot for a chapter.
+    /// </summary>
     public async Task<IActionResult> CreateSnapshot([FromBody] CreateSnapshotRequest request, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(request.ChapterId, cancellationToken)) return NotFound();
@@ -52,30 +64,62 @@ public class SnapshotsController : ControllerBase
     }
 
     [HttpPost("restore")]
+    /// <summary>
+    /// Restores chapter content from a snapshot.
+    /// </summary>
     public async Task<IActionResult> RestoreToSnapshot([FromBody] RestoreRequest request, CancellationToken cancellationToken)
     {
-        if (!await OwnsChapter(request.ChapterId, cancellationToken) || !await OwnsSnapshot(request.SnapshotId, cancellationToken)) return NotFound();
+        if (!await OwnsChapter(request.ChapterId, cancellationToken)
+            || !await OwnsSnapshot(request.SnapshotId, cancellationToken))
+        {
+            return NotFound();
+        }
+
         var result = await _mediator.Send(new RestoreToSnapshotCommand(request.ChapterId, request.SnapshotId), cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error!.Message });
     }
 
     [HttpPost("grab-content")]
+    /// <summary>
+    /// Copies content from a snapshot into a target chapter.
+    /// </summary>
     public async Task<IActionResult> GrabContentFromSnapshot([FromBody] GrabContentRequest request, CancellationToken cancellationToken)
     {
-        if (!await OwnsChapter(request.TargetChapterId, cancellationToken) || !await OwnsSnapshot(request.SnapshotId, cancellationToken)) return NotFound();
+        if (!await OwnsChapter(request.TargetChapterId, cancellationToken)
+            || !await OwnsSnapshot(request.SnapshotId, cancellationToken))
+        {
+            return NotFound();
+        }
+
         var result = await _mediator.Send(new GrabContentFromSnapshotCommand(request.TargetChapterId, request.SnapshotId), cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error!.Message });
     }
 
     [HttpGet("compare")]
+    /// <summary>
+    /// Compares two snapshots.
+    /// </summary>
     public async Task<IActionResult> CompareSnapshots([FromQuery] Guid baseId, [FromQuery] Guid compareId, CancellationToken cancellationToken)
     {
-        if (!await OwnsSnapshot(baseId, cancellationToken) || !await OwnsSnapshot(compareId, cancellationToken)) return NotFound();
+        if (!await OwnsSnapshot(baseId, cancellationToken)
+            || !await OwnsSnapshot(compareId, cancellationToken))
+        {
+            return NotFound();
+        }
+
         var result = await _mediator.Send(new CompareSnapshotsQuery(baseId, compareId), cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error!.Message });
     }
-    private Task<bool> OwnsChapter(Guid id, CancellationToken ct) => _currentUserService.UserId is Guid userId ? _authorization.OwnsChapterAsync(userId, id, ct) : Task.FromResult(false);
-    private Task<bool> OwnsSnapshot(Guid id, CancellationToken ct) => _currentUserService.UserId is Guid userId ? _authorization.OwnsSnapshotAsync(userId, id, ct) : Task.FromResult(false);
+
+    private Task<bool> OwnsChapter(Guid id, CancellationToken ct)
+        => _currentUserService.UserId is Guid userId
+            ? _authorization.OwnsChapterAsync(userId, id, ct)
+            : Task.FromResult(false);
+
+    private Task<bool> OwnsSnapshot(Guid id, CancellationToken ct)
+        => _currentUserService.UserId is Guid userId
+            ? _authorization.OwnsSnapshotAsync(userId, id, ct)
+            : Task.FromResult(false);
 }
 
 public record CreateSnapshotRequest(Guid ChapterId, string Content, string SnapshotMessage);

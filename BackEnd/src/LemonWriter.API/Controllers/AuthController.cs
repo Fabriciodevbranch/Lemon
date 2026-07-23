@@ -12,6 +12,9 @@ namespace LemonWriter.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+/// <summary>
+/// Authentication endpoints for local and Google OAuth flows.
+/// </summary>
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -26,6 +29,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    /// <summary>
+    /// Registers a user and returns an access token.
+    /// </summary>
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var command = new RegisterUserCommand(request.Email, request.DisplayName, request.Password);
@@ -39,6 +45,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    /// <summary>
+    /// Authenticates a user and returns an access token.
+    /// </summary>
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var credentialsValid = await _authService.ValidateCredentialsAsync(request.Email, request.Password, cancellationToken);
@@ -54,6 +63,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("oauth/google")]
+    /// <summary>
+    /// Starts Google OAuth login.
+    /// </summary>
     public IActionResult GoogleLogin()
     {
         var callback = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme)!;
@@ -61,6 +73,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("oauth/google/complete")]
+    /// <summary>
+    /// Completes Google OAuth login and redirects to frontend callback URL.
+    /// </summary>
     public async Task<IActionResult> GoogleCallback(CancellationToken cancellationToken)
     {
         var external = await HttpContext.AuthenticateAsync("External");
@@ -87,7 +102,8 @@ public class AuthController : ControllerBase
         await HttpContext.SignOutAsync("External");
         var token = GenerateJwtToken(user!.Id, user.Email, user.Name);
         var frontend = _configuration["Frontend:BaseUrl"] ?? "http://localhost:4200";
-        var query = $"token={Uri.EscapeDataString(token)}&id={user.Id}&email={Uri.EscapeDataString(user.Email)}&displayName={Uri.EscapeDataString(user.Name)}";
+        var query =
+            $"token={Uri.EscapeDataString(token)}&id={user.Id}&email={Uri.EscapeDataString(user.Email)}&displayName={Uri.EscapeDataString(user.Name)}";
         return Redirect($"{frontend}/auth/google-callback?{query}");
     }
 

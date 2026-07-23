@@ -8,6 +8,9 @@ namespace LemonWriter.API.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/books/{bookId:guid}/studio")]
+/// <summary>
+/// Endpoints for story studio entries, timeline, relationships, and metrics.
+/// </summary>
 public sealed class StoryStudioController(
     IStudioEntryService entries,
     ITimelineService timeline,
@@ -50,8 +53,11 @@ public sealed class StoryStudioController(
     {
         if (!await OwnsBook(bookId, ct)) return NotFound();
         var result = await entries.UpdateMetadataAsync(bookId, id, new(request.Name, request.Summary, request.Details), ct);
-        return result.IsSuccess ? Ok(result.Value) : result.Error == LemonWriter.Application.Common.Errors.Error.NotFound
-            ? NotFound() : BadRequest(new { message = result.Error!.Message });
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : result.Error == LemonWriter.Application.Common.Errors.Error.NotFound
+                ? NotFound()
+                : BadRequest(new { message = result.Error!.Message });
     }
 
     [HttpPut("characters/{id:guid}/profile")]
@@ -59,8 +65,11 @@ public sealed class StoryStudioController(
     {
         if (!await OwnsBook(bookId, ct)) return NotFound();
         var result = await entries.UpdateCharacterProfileAsync(bookId, id, request.ToDto(), ct);
-        return result.IsSuccess ? Ok(result.Value) : result.Error == LemonWriter.Application.Common.Errors.Error.NotFound
-            ? NotFound() : BadRequest(new { message = result.Error!.Message });
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : result.Error == LemonWriter.Application.Common.Errors.Error.NotFound
+                ? NotFound()
+                : BadRequest(new { message = result.Error!.Message });
     }
 
     [HttpPatch("goals/{id:guid}/progress")]
@@ -149,6 +158,16 @@ public record UpdateCharacterProfile(string Name, string? Summary, string? Story
         PortraitMediaId, ExternalGoal, InternalNeed, Fear, Secret, InternalConflict, ExternalConflict, NarrativeFunction,
         ArcSummary, StartingState, TurningPoint, EndingState, Notes);
 }
-public record CreateRelationship(Guid From, Guid To, string? Label, string? Tone, string RelationshipType = "Other", string? Description = null, string? Status = null)
-{ public CreateStoryRelationshipDto ToDto() => new(From, To, Label, Tone, RelationshipType, Description, Status); }
+public record CreateRelationship(
+    Guid From,
+    Guid To,
+    string? Label,
+    string? Tone,
+    string RelationshipType = "Other",
+    string? Description = null,
+    string? Status = null)
+{
+    public CreateStoryRelationshipDto ToDto()
+        => new(From, To, Label, Tone, RelationshipType, Description, Status);
+}
 public record ReorderTimelineRequest(IReadOnlyList<Guid> Ids);

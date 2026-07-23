@@ -10,16 +10,32 @@ namespace LemonWriter.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+/// <summary>
+/// Endpoints for chapter management under user-owned books.
+/// </summary>
 public class ChaptersController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUser;
     private readonly IResourceAuthorizationService _authorization;
 
-    public ChaptersController(IMediator mediator, ICurrentUserService currentUser, IResourceAuthorizationService authorization)
-    { _mediator = mediator; _currentUser = currentUser; _authorization = authorization; }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChaptersController"/> class.
+    /// </summary>
+    public ChaptersController(
+        IMediator mediator,
+        ICurrentUserService currentUser,
+        IResourceAuthorizationService authorization)
+    {
+        _mediator = mediator;
+        _currentUser = currentUser;
+        _authorization = authorization;
+    }
 
     [HttpGet]
+    /// <summary>
+    /// Lists chapters for a given book.
+    /// </summary>
     public async Task<IActionResult> GetChapters([FromQuery] Guid bookId, CancellationToken cancellationToken)
     {
         if (!await OwnsBook(bookId, cancellationToken)) return NotFound();
@@ -28,6 +44,9 @@ public class ChaptersController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    /// <summary>
+    /// Gets one chapter by identifier.
+    /// </summary>
     public async Task<IActionResult> GetChapter(Guid id, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(id, cancellationToken)) return NotFound();
@@ -36,6 +55,9 @@ public class ChaptersController : ControllerBase
     }
 
     [HttpPost]
+    /// <summary>
+    /// Creates a chapter for a book owned by the current user.
+    /// </summary>
     public async Task<IActionResult> CreateChapter([FromBody] CreateChapterRequest request, CancellationToken cancellationToken)
     {
         if (!await OwnsBook(request.BookId, cancellationToken)) return NotFound();
@@ -46,6 +68,9 @@ public class ChaptersController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    /// <summary>
+    /// Updates an existing chapter.
+    /// </summary>
     public async Task<IActionResult> UpdateChapter(Guid id, [FromBody] UpdateChapterRequest request, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(id, cancellationToken)) return NotFound();
@@ -54,6 +79,9 @@ public class ChaptersController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    /// <summary>
+    /// Deletes an existing chapter.
+    /// </summary>
     public async Task<IActionResult> DeleteChapter(Guid id, CancellationToken cancellationToken)
     {
         if (!await OwnsChapter(id, cancellationToken)) return NotFound();
@@ -61,8 +89,15 @@ public class ChaptersController : ControllerBase
         return result.IsSuccess ? NoContent() : NotFound(new { error = result.Error!.Message });
     }
 
-    private Task<bool> OwnsBook(Guid id, CancellationToken ct) => _currentUser.UserId is Guid userId ? _authorization.OwnsBookAsync(userId, id, ct) : Task.FromResult(false);
-    private Task<bool> OwnsChapter(Guid id, CancellationToken ct) => _currentUser.UserId is Guid userId ? _authorization.OwnsChapterAsync(userId, id, ct) : Task.FromResult(false);
+    private Task<bool> OwnsBook(Guid id, CancellationToken ct)
+        => _currentUser.UserId is Guid userId
+            ? _authorization.OwnsBookAsync(userId, id, ct)
+            : Task.FromResult(false);
+
+    private Task<bool> OwnsChapter(Guid id, CancellationToken ct)
+        => _currentUser.UserId is Guid userId
+            ? _authorization.OwnsChapterAsync(userId, id, ct)
+            : Task.FromResult(false);
 }
 
 public record CreateChapterRequest(Guid BookId, string Title, int Order);
