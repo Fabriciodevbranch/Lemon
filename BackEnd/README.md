@@ -31,6 +31,9 @@ Serviços principais:
 - PostgreSQL: `localhost:5432`
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000`
+- Jaeger: `http://localhost:16686`
+- Loki: `http://localhost:3100`
+- cAdvisor: `http://localhost:8081`
 
 O Compose usa uma chave JWT somente para desenvolvimento. Em qualquer ambiente compartilhado, defina `JWT_KEY` com um segredo aleatório de pelo menos 32 caracteres e não habilite `Security__AllowDevelopmentSecrets`.
 

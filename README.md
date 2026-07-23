@@ -185,6 +185,9 @@ Open:
 | Backend API | http://localhost:8080 |
 | Grafana | http://localhost:3000 |
 | Prometheus | http://localhost:9090 |
+| Jaeger | http://localhost:16686 |
+| Loki | http://localhost:3100 |
+| cAdvisor | http://localhost:8081 |
 
 The development stack creates a local administrator account:
 
@@ -225,6 +228,7 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GRAFANA_USER=admin
 GRAFANA_PASSWORD=replace-this-password
+GRAFANA_DB_PASSWORD=replace-this-read-only-database-password
 ```
 
 The defaults in `scripts/docker-compose.yaml` are development conveniences, not production-safe configuration.
@@ -302,9 +306,12 @@ The Docker stack includes:
 
 - Application health endpoints and container health checks
 - OpenTelemetry traces and metrics exported through OTLP
-- Prometheus metric collection
-- Provisioned Grafana data sources and Lemon dashboards
-- Structured Serilog request logs
+- Jaeger distributed-trace storage and exploration
+- Loki-backed OpenTelemetry application logs
+- Prometheus collection of API, cAdvisor container, and PostgreSQL metrics
+- Provisioned Prometheus, Loki, Jaeger, and read-only PostgreSQL Grafana data sources
+- Provisioned application, container, and database dashboards
+- Structured application logs
 
 Observability configuration is versioned under `scripts/observability`. Telemetry should never include passwords, access tokens, manuscript bodies, cover image data, or OAuth secrets.
 

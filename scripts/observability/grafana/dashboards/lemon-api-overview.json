@@ -2,20 +2,75 @@
   "annotations": { "list": [] },
   "editable": true,
   "graphTooltip": 1,
+  "links": [
+    { "title": "Containers", "type": "link", "url": "/d/lemon-infrastructure-overview", "keepTime": true },
+    { "title": "Database", "type": "link", "url": "/d/lemon-database-overview", "keepTime": true },
+    { "title": "Explore traces", "type": "link", "url": "/explore?left={\"datasource\":\"jaeger\"}", "keepTime": true },
+    { "title": "Explore logs", "type": "link", "url": "/explore?left={\"datasource\":\"loki\"}", "keepTime": true }
+  ],
   "panels": [
-    { "type": "stat", "title": "Request rate", "id": 1, "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 }, "targets": [{ "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\"}[5m]))", "legendFormat": "requests/s" }] },
-    { "type": "stat", "title": "5xx error rate", "id": 2, "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 }, "targets": [{ "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\",http_response_status_code=~\"5..\"}[5m]))", "legendFormat": "errors/s" }] },
-    { "type": "stat", "title": "P95 latency", "id": 3, "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 }, "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p95" }], "fieldConfig": { "defaults": { "unit": "s" } } },
-    { "type": "stat", "title": "Process memory", "id": 4, "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 }, "targets": [{ "expr": "process_memory_usage_bytes{job=\"lemon-api\"}", "legendFormat": "memory" }], "fieldConfig": { "defaults": { "unit": "bytes" } } },
-    { "type": "timeseries", "title": "Traffic by route", "id": 5, "gridPos": { "h": 9, "w": 12, "x": 0, "y": 6 }, "targets": [{ "expr": "sum by (http_route) (rate(http_server_request_duration_seconds_count{job=\"lemon-api\"}[5m]))", "legendFormat": "{{http_route}}" }] },
-    { "type": "timeseries", "title": "Latency percentiles", "id": 6, "gridPos": { "h": 9, "w": 12, "x": 12, "y": 6 }, "targets": [{ "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p50" }, { "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p95" }, { "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p99" }], "fieldConfig": { "defaults": { "unit": "s" } } }
+    {
+      "type": "stat", "title": "API scrape health", "id": 1, "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{job=\"lemon-api\"}", "legendFormat": "API" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red" }, { "color": "green", "value": 1 }] } } }
+    },
+    {
+      "type": "stat", "title": "Request rate", "id": 2, "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\"}[5m]))", "legendFormat": "requests/s" }],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "type": "stat", "title": "5xx percentage", "id": 3, "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 * sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\",http_response_status_code=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count{job=\"lemon-api\"}[5m])), 0.001)", "legendFormat": "5xx" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } } }
+    },
+    {
+      "type": "stat", "title": "P95 latency", "id": 4, "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\"}[5m])))", "legendFormat": "p95" }],
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 1 }] } } }
+    },
+    {
+      "type": "timeseries", "title": "Traffic by route", "id": 5, "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (http_route) (rate(http_server_request_duration_seconds_count{job=\"lemon-api\",http_route=~\"$route\"}[5m]))", "legendFormat": "{{http_route}}" }],
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 } }
+    },
+    {
+      "type": "timeseries", "title": "Latency percentiles", "id": 6, "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\",http_route=~\"$route\"}[5m])))", "legendFormat": "p50" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\",http_route=~\"$route\"}[5m])))", "legendFormat": "p95" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lemon-api\",http_route=~\"$route\"}[5m])))", "legendFormat": "p99" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 } }
+    },
+    {
+      "type": "timeseries", "title": "Responses by status", "id": 7, "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{job=\"lemon-api\",http_route=~\"$route\"}[5m]))", "legendFormat": "{{http_response_status_code}}" }],
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 } }
+    },
+    {
+      "type": "timeseries", "title": "API process memory", "id": 8, "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "process_memory_usage_bytes{job=\"lemon-api\"}", "legendFormat": "managed process" }],
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 } }
+    },
+    {
+      "type": "logs", "title": "Application logs", "id": 9, "gridPos": { "h": 11, "w": 24, "x": 0, "y": 22 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [{ "datasource": { "type": "loki", "uid": "loki" }, "expr": "{service_name=\"LemonWriter.API\"} | detected_level=~\"$level\"", "queryType": "range", "refId": "A" }],
+      "options": { "showTime": true, "showLabels": false, "wrapLogMessage": true, "enableLogDetails": true, "sortOrder": "Descending" }
+    }
   ],
   "refresh": "15s",
   "schemaVersion": 41,
-  "tags": ["lemon-writer", "aspnetcore", "otel"],
-  "templating": { "list": [] },
+  "tags": ["lemon-writer", "aspnetcore", "otel", "loki"],
+  "templating": {
+    "list": [
+      { "name": "route", "label": "Route", "type": "query", "datasource": { "type": "prometheus", "uid": "prometheus" }, "query": "label_values(http_server_request_duration_seconds_count{job=\"lemon-api\"}, http_route)", "definition": "label_values(http_server_request_duration_seconds_count{job=\"lemon-api\"}, http_route)", "includeAll": true, "allValue": ".*", "multi": true, "refresh": 1, "current": { "text": "All", "value": "$__all" } },
+      { "name": "level", "label": "Log level", "type": "custom", "query": "TRACE,DEBUG,INFO,WARN,ERROR,FATAL", "includeAll": true, "allValue": ".*", "multi": true, "current": { "text": "All", "value": "$__all" } }
+    ]
+  },
   "time": { "from": "now-1h", "to": "now" },
-  "title": "Lemon Writer API Overview",
+  "title": "Lemon Writer API",
   "uid": "lemon-api-overview",
-  "version": 1
+  "version": 2
 }

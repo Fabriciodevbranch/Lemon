@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Logs;
 using Serilog;
 using System.Text;
 
@@ -120,6 +121,13 @@ builder.Services.AddCors(options =>
 // OpenTelemetry
 var otelServiceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "LemonWriter.API";
 var otelEndpoint = builder.Configuration["OpenTelemetry:Endpoint"] ?? "http://localhost:4317";
+
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.IncludeFormattedMessage = true;
+    logging.IncludeScopes = true;
+    logging.AddOtlpExporter(opts => opts.Endpoint = new Uri(otelEndpoint));
+});
 
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(otelServiceName))

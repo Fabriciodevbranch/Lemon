@@ -64,6 +64,71 @@ services:
       - "4318:4318"
     networks:
       - lemon_net
+    depends_on:
+      jaeger:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.68.0
+    container_name: lemon-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+    networks:
+      - lemon_net
+
+  loki:
+    image: grafana/loki:3.5.1
+    container_name: lemon-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./observability/loki.yaml:/etc/loki/local-config.yaml:ro
+      - lemon_loki:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - lemon_net
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:0.57.0
+    container_name: lemon-cadvisor
+    restart: unless-stopped
+    privileged: true
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=15s
+      - --store_container_labels=true
+      - --disable_metrics=advtcp,cpu_topology,cpuset,hugetlb,memory_numa,process,referenced_memory,resctrl,sched,tcp,udp
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/containerd:/run/containerd:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /var/lib/containerd:/var/lib/containerd:ro
+      - /dev/disk:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    ports:
+      - "8081:8080"
+    networks:
+      - lemon_net
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: lemon-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://lemon:lemon@postgres:5432/lemondb?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lemon_net
 
   prometheus:
     image: prom/prometheus:v3.4.1
@@ -72,11 +137,15 @@ services:
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
     volumes:
       - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus-rules.yml:/etc/prometheus/prometheus-rules.yml:ro
       - lemon_prometheus:/prometheus
     ports:
       - "9090:9090"
     networks:
       - lemon_net
+    depends_on:
+      - cadvisor
+      - postgres-exporter
 
   grafana:
     image: grafana/grafana:12.0.2
@@ -85,6 +154,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-lemon-grafana-readonly}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - lemon_grafana:/var/lib/grafana
@@ -93,7 +163,16 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_started
+      jaeger:
+        condition: service_started
+      loki:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      admin-seed:
+        condition: service_completed_successfully
     networks:
       - lemon_net
 
@@ -127,8 +206,10 @@ services:
       PGDATABASE: lemondb
       PGUSER: lemon
       PGPASSWORD: lemon
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-lemon-grafana-readonly}
     volumes:
       - ./postgres/001-seed-admin.sql:/seed/001-seed-admin.sql:ro
+      - ./postgres/002-grafana-reader.sql:/seed/002-grafana-reader.sql:ro
       - ./postgres/seed-admin.sh:/seed/seed-admin.sh:ro
     command: ["sh", "/seed/seed-admin.sh"]
     depends_on:
@@ -141,6 +222,7 @@ volumes:
   lemon_pgdata:
   lemon_prometheus:
   lemon_grafana:
+  lemon_loki:
 
 networks:
   lemon_net:

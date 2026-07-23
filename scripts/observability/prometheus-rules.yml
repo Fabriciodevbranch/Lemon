@@ -1,0 +1,22 @@
+groups:
+  - name: lemon-container-recording
+    interval: 30s
+    rules:
+      - record: lemon:container_cpu_usage_cores:rate5m
+        expr: sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[5m]))
+      - record: lemon:container_cpu_throttled_seconds:rate5m
+        expr: sum by (container_label_com_docker_compose_service) (rate(container_cpu_cfs_throttled_seconds_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[5m]))
+      - record: lemon:container_memory_working_set_bytes
+        expr: sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job="cadvisor", image!="", container_label_com_docker_compose_service!=""})
+      - record: lemon:container_memory_limit_bytes
+        expr: sum by (container_label_com_docker_compose_service) (container_spec_memory_limit_bytes{job="cadvisor", image!="", container_label_com_docker_compose_service!=""} < 1e15)
+      - record: lemon:container_network_receive_bytes:rate5m
+        expr: sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[5m]))
+      - record: lemon:container_network_transmit_bytes:rate5m
+        expr: sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[5m]))
+      - record: lemon:container_fs_reads_bytes:rate5m
+        expr: sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[5m]))
+      - record: lemon:container_fs_writes_bytes:rate5m
+        expr: sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[5m]))
+      - record: lemon:container_oom_events:increase1h
+        expr: sum by (container_label_com_docker_compose_service) (increase(container_oom_events_total{job="cadvisor", image!="", container_label_com_docker_compose_service!=""}[1h]))

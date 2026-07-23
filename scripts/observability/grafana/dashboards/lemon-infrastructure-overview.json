@@ -1,0 +1,99 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [
+    { "title": "API dashboard", "type": "link", "url": "/d/lemon-api-overview", "keepTime": true },
+    { "title": "Database dashboard", "type": "link", "url": "/d/lemon-database-overview", "keepTime": true }
+  ],
+  "panels": [
+    {
+      "type": "stat", "title": "Running services", "id": 1,
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "count(count by (container_label_com_docker_compose_service) (container_last_seen{job=\"cadvisor\",image!=\"\",container_label_com_docker_compose_service!=\"\"}))", "legendFormat": "services" }]
+    },
+    {
+      "type": "stat", "title": "CPU used", "id": 2,
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(lemon:container_cpu_usage_cores:rate5m)", "legendFormat": "cores" }],
+      "fieldConfig": { "defaults": { "unit": "cores" } }
+    },
+    {
+      "type": "stat", "title": "Working-set memory", "id": 3,
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(lemon:container_memory_working_set_bytes)", "legendFormat": "memory" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "type": "stat", "title": "OOM events (1h)", "id": 4,
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(lemon:container_oom_events:increase1h)", "legendFormat": "OOMs" }],
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }, { "color": "red", "value": 1 }] } } }
+    },
+    {
+      "type": "timeseries", "title": "CPU usage by service", "id": 5,
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_cpu_usage_cores:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}}" }],
+      "fieldConfig": { "defaults": { "unit": "cores", "min": 0 } }
+    },
+    {
+      "type": "timeseries", "title": "Memory by service", "id": 6,
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_memory_working_set_bytes{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}} used" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_memory_limit_bytes{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}} limit" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 } }
+    },
+    {
+      "type": "timeseries", "title": "Network throughput", "id": 7,
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_network_receive_bytes:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}} receive" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "-lemon:container_network_transmit_bytes:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}} transmit" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" } }
+    },
+    {
+      "type": "timeseries", "title": "Filesystem throughput", "id": 8,
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_fs_reads_bytes:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}} read" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "-lemon:container_fs_writes_bytes:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}} write" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" } }
+    },
+    {
+      "type": "timeseries", "title": "CPU throttling by service", "id": 9,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_cpu_throttled_seconds:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "legendFormat": "{{container_label_com_docker_compose_service}}" }],
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 } }
+    },
+    {
+      "type": "table", "title": "Service resource snapshot", "id": 10,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_cpu_usage_cores:rate5m{container_label_com_docker_compose_service=~\"$service\"}", "format": "table", "instant": true, "legendFormat": "CPU cores" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "lemon:container_memory_working_set_bytes{container_label_com_docker_compose_service=~\"$service\"}", "format": "table", "instant": true, "legendFormat": "Memory" }
+      ]
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": ["lemon-writer", "cadvisor", "containers"],
+  "templating": {
+    "list": [
+      {
+        "name": "service", "label": "Service", "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(lemon:container_cpu_usage_cores:rate5m, container_label_com_docker_compose_service)",
+        "definition": "label_values(lemon:container_cpu_usage_cores:rate5m, container_label_com_docker_compose_service)",
+        "includeAll": true, "allValue": ".*", "multi": true, "refresh": 1, "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Lemon Writer Containers",
+  "uid": "lemon-infrastructure-overview",
+  "version": 2
+}
